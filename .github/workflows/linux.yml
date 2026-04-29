@@ -1,0 +1,294 @@
+name: Release
+
+# Trigger on version tags — e.g. git tag v1.2.3 && git push --tags
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+  # Also allow triggering manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v1.0.0)"
+        required: true
+        default: "v0.0.1"
+
+permissions:
+  contents: write   # needed to create GitHub Releases
+
+# ---------------------------------------------------------------------------
+# Shared environment
+# ---------------------------------------------------------------------------
+env:
+  APP_ID: xyz.u00004321.ZeroBrowser
+  FLUTTER_VERSION: "3.x"   # track latest stable 3.x; pin to exact version if preferred
+  BINARY_NAME: zero_browser
+
+jobs:
+  # =========================================================================
+  # JOB 1 — Build Flutter Linux Bundle (Shared)
+  # =========================================================================
+  build-linux-bundle:
+    name: Build Flutter Linux Bundle
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---- Flutter --------------------------------------------------------
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      # ---- Linux build dependencies ---------------------------------------
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev \
+            libglib2.0-dev libgdk-pixbuf-2.0-dev
+
+      # ---- Flutter build --------------------------------------------------
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Build Flutter Linux release
+        run: flutter build linux --release
+
+      - name: Create Linux bundle tarball
+        run: |
+          cd build/linux/x64/release/bundle
+          tar -czf ../../../../../ZeroBrowser-linux-x64.tar.gz .
+
+      - name: Upload Linux bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-linux-bundle
+          path: build/linux/x64/release/bundle/
+          retention-days: 1
+
+  # =========================================================================
+  # JOB 2 — Build AppImage
+  # =========================================================================
+  build-appimage:
+    name: Build AppImage
+    runs-on: ubuntu-22.04
+    needs: build-linux-bundle
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Linux bundle artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: flutter-linux-bundle
+          path: build/linux/x64/release/bundle
+
+      # ---- Linux dependencies for packaging -------------------------------
+      - name: Install Linux packaging dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            patchelf libfuse2 appstream
+
+      # ---- AppImage assembly ----------------------------------------------
+      - name: Download appimagetool
+        run: |
+          wget -q --show-progress \
+            "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" \
+            -O /tmp/appimagetool
+          chmod +x /tmp/appimagetool
+
+      - name: Assemble AppDir
+        run: |
+          BUNDLE="build/linux/x64/release/bundle"
+          APPDIR="/tmp/AppDir"
+
+          mkdir -p "$APPDIR/usr/bin"
+          mkdir -p "$APPDIR/usr/lib"
+          mkdir -p "$APPDIR/usr/share/applications"
+          mkdir -p "$APPDIR/usr/share/icons/hicolor/512x512/apps"
+          mkdir -p "$APPDIR/usr/share/$BINARY_NAME/data"
+
+          # Binary
+          cp "$BUNDLE/$BINARY_NAME" "$APPDIR/usr/bin/$BINARY_NAME"
+          chmod +x "$APPDIR/usr/bin/$BINARY_NAME"
+
+          # Bundled shared libraries
+          if [ -d "$BUNDLE/lib" ]; then
+            cp -r "$BUNDLE/lib/." "$APPDIR/usr/lib/"
+            ln -sf "../lib" "$APPDIR/usr/bin/lib"
+          fi
+
+          # Flutter assets (icudtl.dat, flutter_assets/, etc.)
+          [ -d "$BUNDLE/data" ] && cp -r "$BUNDLE/data/." "$APPDIR/usr/share/$BINARY_NAME/data/"
+          ln -sf "../share/$BINARY_NAME/data" "$APPDIR/usr/bin/data"
+
+          # Icon and desktop entry
+          cp "packaging/zero_browser.png" \
+             "$APPDIR/usr/share/icons/hicolor/512x512/apps/${{ env.APP_ID }}.png"
+          cp "packaging/zero_browser.png" "$APPDIR/.DirIcon"
+          cp "packaging/zero_browser.png" "$APPDIR/${{ env.APP_ID }}.png"
+          cp "packaging/zero_browser.desktop" \
+             "$APPDIR/usr/share/applications/${{ env.APP_ID }}.desktop"
+          cp "packaging/zero_browser.desktop" "$APPDIR/${{ env.APP_ID }}.desktop"
+
+          # AppStream metainfo
+          mkdir -p "$APPDIR/usr/share/metainfo"
+          cp "packaging/${{ env.APP_ID }}.metainfo.xml" \
+             "$APPDIR/usr/share/metainfo/${{ env.APP_ID }}.metainfo.xml"
+
+          # AppRun launcher
+          cat > "$APPDIR/AppRun" << 'EOF'
+          #!/usr/bin/env bash
+          HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+          export LD_LIBRARY_PATH="$HERE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          exec "$HERE/usr/bin/zero_browser" "$@"
+          EOF
+          chmod +x "$APPDIR/AppRun"
+
+      - name: Build AppImage
+        run: |
+          # GitHub Actions runners don't have FUSE; use extract-and-run mode
+          APPIMAGE_EXTRACT_AND_RUN=1 /tmp/appimagetool \
+            /tmp/AppDir \
+            ZeroBrowser-x86_64.AppImage
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: appimage
+          path: ZeroBrowser-x86_64.AppImage
+          retention-days: 1
+
+  # =========================================================================
+  # JOB 3 — Build Flatpak
+  # =========================================================================
+  build-flatpak:
+    name: Build Flatpak
+    runs-on: ubuntu-22.04
+    needs: build-linux-bundle
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Linux bundle artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: flutter-linux-bundle
+          path: build/linux/x64/release/bundle
+
+      # ---- Flatpak build tools --------------------------------------------
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            flatpak flatpak-builder \
+            elfutils
+
+      # ---- Flatpak runtimes -----------------------------------------------
+      - name: Add Flathub remote and install runtimes
+        run: |
+          flatpak remote-add --user --if-not-exists flathub \
+            https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y --noninteractive \
+            flathub org.freedesktop.Platform//24.08 \
+                    org.freedesktop.Sdk//24.08
+
+      # ---- Flatpak build --------------------------------------------------
+      - name: Build Flatpak (flatpak-builder)
+        run: |
+          flatpak-builder \
+            --force-clean \
+            --user \
+            --install \
+            --repo=.flatpak-repo \
+            --disable-rofiles-fuse \
+            .flatpak-build \
+            packaging/${{ env.APP_ID }}.yml
+
+      - name: Export portable .flatpak bundle
+        run: |
+          flatpak build-bundle \
+            --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo \
+            .flatpak-repo \
+            ZeroBrowser.flatpak \
+            ${{ env.APP_ID }}
+
+      - name: Upload Flatpak artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flatpak
+          path: ZeroBrowser.flatpak
+          retention-days: 1
+
+  # =========================================================================
+  # JOB 4 — Create GitHub Release
+  # =========================================================================
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-22.04
+    needs: [build-appimage, build-flatpak, build-linux-bundle]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download AppImage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: appimage
+          path: dist/
+
+      - name: Download Flatpak artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: flatpak
+          path: dist/
+
+      - name: Determine release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.value }}
+          name: "Zero Browser ${{ steps.tag.outputs.value }}"
+          draft: false
+          prerelease: ${{ contains(steps.tag.outputs.value, '-') }}
+          generate_release_notes: true
+          body: |
+            ## Installation
+
+            ### AppImage (portable — no install required)
+            ```bash
+            chmod +x ZeroBrowser-x86_64.AppImage
+            ./ZeroBrowser-x86_64.AppImage
+            ```
+
+            ### Flatpak
+            ```bash
+            flatpak install --user ZeroBrowser.flatpak
+            flatpak run xyz.u00004321.ZeroBrowser
+            ```
+          files: |
+            dist/ZeroBrowser-x86_64.AppImage
+            dist/ZeroBrowser.flatpak
+            ZeroBrowser-linux-x64.tar.gz
+
+
+        

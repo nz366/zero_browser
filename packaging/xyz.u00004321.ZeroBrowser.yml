@@ -1,0 +1,72 @@
+app-id: xyz.u00004321.ZeroBrowser
+runtime: org.freedesktop.Platform
+runtime-version: "24.08"
+sdk: org.freedesktop.Sdk
+command: zero_browser
+
+appstream-compose: false
+
+finish-args:
+  # Display
+  - --socket=x11
+  - --socket=wayland
+  - --share=ipc
+  # Network access (required for a browser)
+  - --share=network
+  # File system access for downloads and user data
+  - --filesystem=home
+  # GPU access for Flutter rendering
+  - --device=dri
+  # Allow reading host environment theme settings
+  - --env=GTK_THEME=Adwaita:dark
+
+modules:
+  - name: zero_browser
+    buildsystem: simple
+    sources:
+      # The pre-built Flutter release bundle is used as a local directory source.
+      # Run `flutter build linux --release` before `flatpak-builder`.
+      - type: dir
+        path: ../build/linux/x64/release/bundle
+        dest: bundle
+
+      # Asset files from the packaging directory
+      - type: file
+        path: zero_browser.png
+      - type: file
+        path: zero_browser.desktop
+      - type: file
+        path: xyz.u00004321.ZeroBrowser.metainfo.xml
+
+    build-commands:
+      # Install binary
+      - install -Dm755 bundle/zero_browser /app/bin/zero_browser
+
+      # Install bundled shared libraries
+      - |
+        if [ -d bundle/lib ]; then
+          mkdir -p /app/lib
+          cp -r bundle/lib/. /app/lib/
+          ln -sf ../lib /app/bin/lib
+        fi
+
+      # Install Flutter data assets (icudtl.dat, flutter_assets/, etc.)
+      - |
+        if [ -d bundle/data ]; then
+          mkdir -p /app/share/zero_browser/data
+          cp -r bundle/data/. /app/share/zero_browser/data/
+          # Symlink so the binary can find data/ relative to itself
+          ln -sf ../share/zero_browser/data /app/bin/data
+        fi
+
+      # Install icon
+      - install -Dm644 zero_browser.png
+          /app/share/icons/hicolor/512x512/apps/xyz.u00004321.ZeroBrowser.png
+
+      # Install desktop entry
+      - install -Dm644 zero_browser.desktop
+          /app/share/applications/xyz.u00004321.ZeroBrowser.desktop
+
+      # Install AppStream metainfo
+      - install -Dm644 xyz.u00004321.ZeroBrowser.metainfo.xml
+          /app/share/metainfo/xyz.u00004321.ZeroBrowser.metainfo.xml

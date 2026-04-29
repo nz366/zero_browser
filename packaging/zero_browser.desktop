@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Zero Browser
+Comment=A minimal, fast browser built with Flutter
+Exec=zero_browser
+Icon=xyz.u00004321.ZeroBrowser
+Categories=Network;WebBrowser;
+Terminal=false
+StartupNotify=true
+StartupWMClass=zero_browser
+MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>xyz.u00004321.ZeroBrowser</id>
+
+  <name>Zero Browser</name>
+  <summary>A minimal, fast browser built with Flutter</summary>
+  <developer_name>NZ</developer_name>
+
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+
+  <description>
+    <p>
+      Zero Browser is a minimal, fast web browser built with Flutter for Linux.
+      It provides a clean browsing experience with tab management, history tracking,
+      and bookmark support.
+    </p>
+  </description>
+
+  <categories>
+    <category>Network</category>
+    <category>WebBrowser</category>
+  </categories>
+
+  <url type="homepage">https://github.com/nz/zero_browser</url>
+  <url type="bugtracker">https://github.com/nz/zero_browser/issues</url>
+  <url type="vcs-browser">https://github.com/nz/zero_browser</url>
+
+  <provides>
+    <binary>zero_browser</binary>
+  </provides>
+
+  <releases>
+    <release version="0.0.1" date="2026-04-05">
+      <description>
+        <p>Initial release with tab management and bookmark support.</p>
+      </description>
+    </release>
+  </releases>
+
+  <content_rating type="oars-1.1" />
+
+  <launchable type="desktop-id">xyz.u00004321.ZeroBrowser.desktop</launchable>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Zero Browser main window</caption>
+      <image>https://raw.githubusercontent.com/nz/zero_browser/main/packaging/screenshots/screenshot.png</image>
+    </screenshot>
+  </screenshots>
+</component>
