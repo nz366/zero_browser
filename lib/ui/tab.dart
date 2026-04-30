@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:zero_browser/ui/menu.dart';
 import 'package:zero_browser/ui/tabpane.dart';
+import 'package:zero_browser/widgets/code.dart';
 import 'package:zero_browser/widgets/content.dart';
 import 'package:uuid/uuid.dart';
 import 'package:zero_browser/providers/bookmark_provider.dart';
@@ -275,8 +276,9 @@ class TabPaneProviderExample extends StatelessWidget {
                             ? const BoxConstraints()
                             : const BoxConstraints(maxWidth: 1000),
                         child: CodeSnippet(
-                          code: Text(
-                            provider.focusedTab.page.content
+                          code: CodeHighlighter(
+                            mode: "json",
+                            code: provider.focusedTab.page.content
                                 .map((e) => e.toJson())
                                 .join("\n"),
                           ),

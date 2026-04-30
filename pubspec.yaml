@@ -51,6 +51,7 @@ dependencies:
   puppeteer: ^3.22.0
   crypto: ^3.0.6
   waterfall_flow: ^3.1.1
+  syntax_highlight: ^0.5.0
 
 dev_dependencies:
   flutter_test:
