@@ -1,6 +1,7 @@
 import 'package:provider/provider.dart';
 import 'package:syntax_highlight/syntax_highlight.dart';
 import 'package:zero_browser/client/client.dart';
+import 'package:zero_browser/client/hosts/bluebird.dart';
 import 'package:zero_browser/client/hosts/chrome.dart';
 import 'package:zero_browser/client/hosts/github.dart';
 import 'package:zero_browser/client/hosts/gram.dart';
@@ -26,6 +27,7 @@ Future<void> main() async {
   RequesterRegistry.register(GiteaRequest());
   RequesterRegistry.register(GramRequest());
   RequesterRegistry.register(GurRequest());
+  RequesterRegistry.register(BlueBirdRequest());
   await Highlighter.initialize(['dart']);
 
   runApp(
