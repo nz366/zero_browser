@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' hide TabPane, TabPaneData;
 import 'package:provider/provider.dart';
@@ -241,9 +242,9 @@ class TabPaneProviderExample extends StatelessWidget {
                       icon: Icon(Icons.file_copy_outlined),
                       // icon: Icon(Icons.account_box),
                       onPressed: () async {
-                        final data = tabs[focused].data.page.content
-                            .map((e) => e.toJson())
-                            .join("\n");
+                        final data = JsonEncoder.withIndent(
+                          '  ',
+                        ).convert(tabs[focused].data.page.toJson());
                         await Clipboard.setData(ClipboardData(text: data));
 
                         showToast(

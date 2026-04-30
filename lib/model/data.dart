@@ -131,7 +131,7 @@ class CommentData {
   }
   Map<String, dynamic> toJson() {
     return {
-      "content": content,
+      "content": "\"$content\"",
       "author": author,
       "created_at": createdAt?.toIso8601String(),
       "score": score,
@@ -154,13 +154,17 @@ sealed class Section {
 
     return switch (type) {
       'markdown' => MarkdownSection(data as String),
-      'comment_thread' => CommentThreadSection((data as List<CommentData>)),
+      'comment_thread' => CommentThreadSection(
+        (data as List).map((e) => CommentData.fromJson(e)).toList(),
+      ),
       'article_list' => ArticleListSection.fromJson(
         data as Map<String, dynamic>,
       ),
       'table' => TableSection.fromJson(data as Map<String, dynamic>),
       'image_grid' => ImageGridSection(data),
       'settings_sliver' => SettingsSliverSection(data as String),
+      'form' => FormSection.fromJson(data as Map<String, dynamic>),
+      'media' => MediaSection.fromJson(data as Map<String, dynamic>),
       _ => throw Exception('Unknown section type: $type'),
     };
   }
@@ -173,7 +177,7 @@ class MarkdownSection extends Section {
   const MarkdownSection(this.data);
 
   @override
-  Map<String, dynamic> toJson() => {'type': 'markdown', 'data': data};
+  Map<String, dynamic> toJson() => {'type': 'markdown', 'data': "\"$data\""};
 }
 
 class CommentThreadSection extends Section {
@@ -254,6 +258,26 @@ class PageData {
     required this.content,
   });
 
+  factory PageData.fromJson(Map<String, dynamic> json) {
+    return PageData(
+      url: json['url'] ?? '',
+      title: json['title'] ?? '',
+      loading: json['loading'] ?? false,
+      content: (json['content'] as List? ?? [])
+          .map((e) => Section.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'url': url,
+      'title': title,
+      'loading': loading,
+      'content': content.map((e) => e.toJson()).toList(),
+    };
+  }
+
   @override
   String toString() {
     return content
@@ -304,12 +328,25 @@ class FormSection extends Section {
   @override
   Map<String, dynamic> toJson() {
     return {
-      'title': title,
-      'fields': {
-        for (final MapEntry(key: key, value: value) in fields.entries)
-          key: value.toJson(),
+      'type': 'form',
+      'data': {
+        'title': title,
+        'fields': {
+          for (final MapEntry(key: key, value: value) in fields.entries)
+            key: value.toJson(),
+        },
       },
     };
+  }
+
+  factory FormSection.fromJson(Map<String, dynamic> json) {
+    return FormSection(
+      title: json['title'] as String?,
+      fields: (json['fields'] as Map<String, dynamic>).map(
+        (key, value) =>
+            MapEntry(key, Field.fromJson(value as Map<String, dynamic>)),
+      ),
+    );
   }
 }
 
@@ -321,11 +358,16 @@ class MediaSection extends Section {
   @override
   Map<String, dynamic> toJson() {
     return {
-      "data": {"items": items},
+      'type': 'media',
+      "data": {"items": items.map((e) => e.toList()).toList()},
     };
   }
 
   factory MediaSection.fromJson(Map<String, dynamic> json) {
-    return MediaSection(items: json['items'] as List<Uint8List>);
+    return MediaSection(
+      items: (json['items'] as List)
+          .map((e) => Uint8List.fromList((e as List).cast<int>()))
+          .toList(),
+    );
   }
 }

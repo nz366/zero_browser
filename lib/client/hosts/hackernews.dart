@@ -128,13 +128,14 @@ class HackernewsRequest extends RequestTransformer {
       final replies = await fetchcomments(kidslist);
 
       if (comment != null && comment['type'] == 'comment') {
-        final htmlmd = html2md.convert(comment['text'] ?? "");
+        final htmlmd = html2md
+            .convert(comment['text'] ?? "")
+            .replaceAll(r'\', '');
 
         comments.add(
           CommentData(
             content: htmlmd,
 
-            // """$websiteHost/item?id=${comment['id']} ${comment['title'] ?? ""} * ${comment['url'] ?? ""} * \n${comment['text'] ?? ""}""",
             author: comment['by'] ?? 'unknown',
 
             id: element.toString(),

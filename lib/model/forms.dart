@@ -7,6 +7,23 @@ sealed class Field<T> {
 
   bool checkConstraints();
 
+  static Field fromJson(Map<String, dynamic> json) {
+    final type = json['type'] as String;
+    final name = json['name'] as String;
+    final label = json['label'] as String?;
+    final data = json['data'];
+
+    return switch (type) {
+      'text' => TextField(
+        name: name,
+        label: label,
+        hint: json['hint'] as String?,
+      )..value = data as String?,
+      'checkbox' => CheckboxField(name: name, label: label)..value = data as bool?,
+      _ => throw Exception('Unknown field type: $type'),
+    };
+  }
+
   Object? toJson();
 }
 
@@ -19,6 +36,8 @@ class TextField extends Field<String> {
   Map<String, dynamic> toJson() => {
     'name': name,
     'type': 'text',
+    'label': label,
+    'hint': hint,
     'data': value,
   };
 
@@ -36,6 +55,7 @@ class CheckboxField extends Field<bool> {
   Map<String, dynamic> toJson() => {
     'name': name,
     'type': 'checkbox',
+    'label': label,
     'data': value,
   };
 
