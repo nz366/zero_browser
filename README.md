@@ -38,4 +38,5 @@ These are competing, involving and motivating projects that this project won't b
 - Documentation website crashing.
 - Government websites intentionally limiting basic functionality.
 - nodejs.
+- [cursed_browser](https://github.com/scosman/cursed_browser)
 - more....
