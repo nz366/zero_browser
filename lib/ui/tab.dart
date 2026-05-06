@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' hide TabPane, TabPaneData;
 import 'package:provider/provider.dart';
@@ -5,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:zero_browser/ui/menu.dart';
 import 'package:zero_browser/ui/tabpane.dart';
+import 'package:zero_browser/widgets/code.dart';
 import 'package:zero_browser/widgets/content.dart';
 import 'package:uuid/uuid.dart';
 import 'package:zero_browser/providers/bookmark_provider.dart';
@@ -241,9 +243,9 @@ class TabPaneProviderExample extends StatelessWidget {
                       icon: Icon(Icons.file_copy_outlined),
                       // icon: Icon(Icons.account_box),
                       onPressed: () async {
-                        final data = tabs[focused].data.page.content
-                            .map((e) => e.toJson())
-                            .join("\n");
+                        final data = JsonEncoder.withIndent(
+                          '  ',
+                        ).convert(tabs[focused].data.page.toJson());
                         await Clipboard.setData(ClipboardData(text: data));
 
                         showToast(
@@ -274,8 +276,9 @@ class TabPaneProviderExample extends StatelessWidget {
                             ? const BoxConstraints()
                             : const BoxConstraints(maxWidth: 1000),
                         child: CodeSnippet(
-                          code: Text(
-                            provider.focusedTab.page.content
+                          code: CodeHighlighter(
+                            mode: "json",
+                            code: provider.focusedTab.page.content
                                 .map((e) => e.toJson())
                                 .join("\n"),
                           ),

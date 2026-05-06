@@ -1,5 +1,7 @@
 import 'package:provider/provider.dart';
+import 'package:syntax_highlight/syntax_highlight.dart';
 import 'package:zero_browser/client/client.dart';
+import 'package:zero_browser/client/hosts/bluebird.dart';
 import 'package:zero_browser/client/hosts/chrome.dart';
 import 'package:zero_browser/client/hosts/github.dart';
 import 'package:zero_browser/client/hosts/gram.dart';
@@ -14,7 +16,9 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:zero_browser/database/database.dart';
 import 'package:zero_browser/providers/bookmark_provider.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   startChromeExtensionRequestHost();
   RequesterRegistry.register(HackernewsRequest());
   RequesterRegistry.register(MarkdownRequest());
@@ -23,6 +27,8 @@ void main() {
   RequesterRegistry.register(GiteaRequest());
   RequesterRegistry.register(GramRequest());
   RequesterRegistry.register(GurRequest());
+  RequesterRegistry.register(BlueBirdRequest());
+  await Highlighter.initialize(['dart']);
 
   runApp(
     MultiProvider(

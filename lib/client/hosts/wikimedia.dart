@@ -32,7 +32,10 @@ class Mediawiki extends RequestTransformer {
       }
     }
 
-    final mdText = html2md.convert(dom.body?.innerHtml ?? body);
+    var mdText = html2md.convert(dom.body?.innerHtml ?? body);
+
+    mdText = mdText.replaceAll(RegExp(r'\.mw-parser-[\s\S]*?\}'), "");
+    mdText = mdText.replaceAll(RegExp(r'@media[^{]*\{[\s\S]*?\}'), "");
 
     return DataResponse(
       body: [MarkdownSection(mdText)],

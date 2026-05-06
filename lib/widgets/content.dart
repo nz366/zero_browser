@@ -7,6 +7,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' show LucideIcons;
 import 'package:waterfall_flow/waterfall_flow.dart';
 import 'package:zero_browser/model/data.dart';
 import 'package:zero_browser/providers/history_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:zero_browser/widgets/comment_threads/comment_tree.dart';
 import 'package:zero_browser/widgets/forms.dart';
@@ -168,7 +169,7 @@ List<Widget> generateSlivers(BuildContext context, PageData page) {
                 color: Colors.grey.withAlpha(100),
                 activeColor: Colors.grey.withBlue(200),
                 buildHeader: buildHeader,
-                buildBody: buildBody,
+                buildBody: (data) => buildBody(data, context),
                 buildEnd: buildEnd,
               );
             },
@@ -203,9 +204,15 @@ List<Widget> generateSlivers(BuildContext context, PageData page) {
               child: CarouselView(
                 itemExtent: MediaQuery.of(context).size.width * 0.8,
 
-                children: mediaSection.items
-                    .map((e) => Image.memory(e, fit: BoxFit.cover))
-                    .toList(),
+                children: mediaSection.items.map((e) {
+                  final String start = String.fromCharCodes(
+                    e.take(100),
+                  ).toLowerCase();
+                  if (start.contains('<svg') || start.contains('<?xml')) {
+                    return SvgPicture.memory(e, fit: BoxFit.cover);
+                  }
+                  return Image.memory(e, fit: BoxFit.cover);
+                }).toList(),
               ),
             ),
           ),
@@ -236,60 +243,91 @@ class ThumbnailWidget extends StatefulWidget {
 class _ThumbnailWidgetState extends State<ThumbnailWidget> {
   @override
   Widget build(BuildContext context) {
-    if (widget.url == null) {
+    if (widget.url == null || widget.url!.isEmpty) {
       return SizedBox.shrink();
     }
+    final url = widget.url!;
+
     return Image.network(
-      widget.url!,
+      url,
       errorBuilder: (c, e, s) {
-        // ArgumentError (Invalid argument(s): No host specified in URI ''
         if (e is ArgumentError) {
-          if (widget.url is String &&
-              (widget.url!.length % 4 == 0) &&
-              widget.url!.startsWith('data:image/') &&
-              widget.url!.contains(';base64,')) {
-            final imagemem = base64Decode(widget.url!.split(';base64,')[1]);
-            return Image.memory(imagemem);
+          if (url.startsWith("//")) {
+            return ThumbnailWidget(url: "https:" + url);
+          }
+
+          if (url.contains('data:')) {
+            if (url.contains('image/svg+xml')) {
+              final String base64Data = url.split(',').last;
+              return SvgPicture.memory(base64Decode(base64Data));
+            } else if (url.contains(';base64,')) {
+              try {
+                final imagemem = base64Decode(url.split(';base64,')[1]);
+                return Image.memory(imagemem);
+              } catch (e) {
+                return Icon(LucideIcons.imageOff);
+              }
+            }
           }
         }
 
-        return Icon(LucideIcons.imageOff);
+        if (url.toLowerCase().split('?').first.endsWith('.svg')) {
+          return SvgPicture.network(
+            url,
+            placeholderBuilder: (context) =>
+                Center(child: CircularProgressIndicator()),
+            errorBuilder: (context, error, stackTrace) =>
+                Icon(LucideIcons.imageOff),
+          );
+        }
+
+        return Tooltip(
+          message: "${e.toString()}\n${s.toString()}",
+          child: Icon(LucideIcons.imageOff),
+        );
       },
     );
   }
 }
 
 Widget buildMarkdown(element, BuildContext context) {
+  return MarkdownWidget(
+    sliverMode: true,
+    data: element,
+    config: getMarkdownConfig(context),
+  );
+}
+
+MarkdownConfig getMarkdownConfig(BuildContext context) {
   final config = Theme.of(context).brightness == Brightness.dark
       ? MarkdownConfig.darkConfig
       : MarkdownConfig.defaultConfig;
 
-  return MarkdownWidget(
-    sliverMode: true,
-    data: element,
-    config: config.copy(
-      configs: [
-        ImgConfig(
-          builder: (imageUrl, _) {
-            return ThumbnailWidget(url: imageUrl);
-          },
-        ),
-        LinkConfig(
-          onTap: (url) {
-            Provider.of<TabProvider>(
-              context,
-              listen: false,
-            ).navigateWithHistory(url);
-          },
-        ),
-      ],
-    ),
+  return config.copy(
+    configs: [
+      ImgConfig(
+        builder: (imageUrl, _) {
+          return ThumbnailWidget(url: imageUrl);
+        },
+      ),
+      LinkConfig(
+        onTap: (url) {
+          Provider.of<TabProvider>(
+            context,
+            listen: false,
+          ).navigateWithHistory(url);
+        },
+      ),
+    ],
   );
 }
 
-Widget buildBody(CommentData data) {
+Widget buildBody(CommentData data, BuildContext context) {
   return ConstrainedBox(
     constraints: BoxConstraints(maxHeight: 300),
-    child: MarkdownBlock(data: data.content),
+    child: MarkdownBlock(
+      data: data.content,
+      config: getMarkdownConfig(context),
+    ),
   );
 }
