@@ -19,9 +19,7 @@ class CurlRequest extends RequestTransformer {
     );
     if (data.statusCode != 200) {
       return DataResponse(
-        body: [
-          MarkdownSection("Curl failed: ${data.reasonPhrase}"),
-        ],
+        body: [MarkdownSection("Curl failed: ${data.reasonPhrase}")],
         statusCode: 500,
         title: "Curl Error",
       );

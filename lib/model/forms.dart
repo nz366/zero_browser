@@ -19,7 +19,10 @@ sealed class Field<T> {
         label: label,
         hint: json['hint'] as String?,
       )..value = data as String?,
-      'checkbox' => CheckboxField(name: name, label: label)..value = data as bool?,
+      'checkbox' => CheckboxField(
+        name: name,
+        label: label,
+      )..value = data as bool?,
       _ => throw Exception('Unknown field type: $type'),
     };
   }
@@ -63,10 +66,9 @@ class CheckboxField extends Field<bool> {
   bool checkConstraints() => true;
 }
 
-
-      // TODO: Add more field types here
-      // case forms.TextAreaField f:
-      // case forms.SelectField f:
-      // case forms.RadioField f:
-      // case forms.FileField f:
-      // case forms.ImageField f:
+// TODO: Add more field types here
+// case forms.TextAreaField f:
+// case forms.SelectField f:
+// case forms.RadioField f:
+// case forms.FileField f:
+// case forms.ImageField f:

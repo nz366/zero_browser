@@ -58,7 +58,13 @@ void main() {
     });
 
     test('TableSection', () {
-      final section = TableSection(items: ['Item 1', 123, {'key': 'value'}]);
+      final section = TableSection(
+        items: [
+          'Item 1',
+          123,
+          {'key': 'value'},
+        ],
+      );
       final json = section.toJson();
       final decoded = Section.fromJson(json) as TableSection;
       expect(decoded.items, section.items);
@@ -80,15 +86,19 @@ void main() {
 
     test('FormSection', () {
       final Map<String, Field> fields = {
-        'username': TextField(name: 'username', label: 'User', hint: 'Enter name'),
+        'username': TextField(
+          name: 'username',
+          label: 'User',
+          hint: 'Enter name',
+        ),
         'agree': CheckboxField(name: 'agree', label: 'Agree'),
       };
       (fields['username'] as TextField).value = 'testuser';
       final section = FormSection(title: 'My Form', fields: fields);
-      
+
       final json = section.toJson();
       final decoded = Section.fromJson(json) as FormSection;
-      
+
       expect(decoded.title, 'My Form');
       expect(decoded.fields.length, 2);
       expect(decoded.fields['username'] is TextField, true);
@@ -100,10 +110,10 @@ void main() {
     test('MediaSection', () {
       final data = Uint8List.fromList([1, 2, 3, 4]);
       final section = MediaSection(items: [data]);
-      
+
       final json = section.toJson();
       final decoded = Section.fromJson(json) as MediaSection;
-      
+
       expect(decoded.items.length, 1);
       expect(decoded.items[0], data);
     });

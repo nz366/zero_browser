@@ -22,14 +22,13 @@ class BookmarkProvider extends ChangeNotifier {
   Future<void> toggleBookmark(String url, {String? title}) async {
     final existing = _bookmarks.where((b) => b.url == url).toList();
     if (existing.isNotEmpty) {
-      await (appDatabase.delete(appDatabase.bookmarks)..where((t) => t.id.equals(existing.first.id))).go();
+      await (appDatabase.delete(
+        appDatabase.bookmarks,
+      )..where((t) => t.id.equals(existing.first.id))).go();
     } else {
-      await appDatabase.into(appDatabase.bookmarks).insert(
-        BookmarksCompanion.insert(
-          url: url,
-          title: Value(title),
-        ),
-      );
+      await appDatabase
+          .into(appDatabase.bookmarks)
+          .insert(BookmarksCompanion.insert(url: url, title: Value(title)));
     }
     await _loadBookmarks();
   }
