@@ -7,6 +7,7 @@ Bringing simplicity to internet. Welcoming new AI era.
 
 A lightweight and pure and *simple* data-driven data-excahnge platform. Eliminating HTML/CSS/JS by implementing common interactive browser elements.
 
+<img width="1280" height="720" alt="image" src="https://github.com/user-attachments/assets/837c464e-432a-43c2-bffd-471d9d653e1d" />
 
 
 ## Features
