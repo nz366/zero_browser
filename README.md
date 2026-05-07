@@ -19,10 +19,10 @@ A lightweight and pure and *simple* data-driven data-excahnge platform. Eliminat
 -   [x] Grids
 -   [ ] Forms
  
-Internet Browsers are very complex systems catering to backwards compatibility. Leading to vulnerable blackbox systems. With the introduction AI today we dream of a new place to share knoledge here.
+Internet Browsers are very complex systems catering to backwards compatibility. Leading to vulnerable blackbox systems. With the introduction AI today we dream of a new place to share knowledge here.
 
 
-## Inspirations & Thanks to
+## Inspirations & Thanks
 These are competing, involving and motivating projects that this project won't be without.
 
 - HTMX proving that we can build complex apps with minimal JS.
