@@ -339,6 +339,17 @@ class FormSection extends Section {
     };
   }
 
+  Map<String, String> toQuery() {
+    // form.title/q?=fileld<key>=<value>?fileld<key>=<value>
+    Map<String, String> queries = {};
+
+    for (final MapEntry(key: key, value: value) in fields.entries) {
+      queries[key] = value.value.toString();
+    }
+
+    return queries;
+  }
+
   factory FormSection.fromJson(Map<String, dynamic> json) {
     return FormSection(
       title: json['title'] as String?,

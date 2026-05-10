@@ -29,9 +29,6 @@ class GiteaRequest extends RequestTransformer {
     switch (uri.host) {
       case "github.com":
         host = "raw.githubusercontent.com";
-        // if (!uri.path.contains('blob/')) {
-        //   uri = Uri.parse(uri.toString().replaceAll('blob/', 'raw/'));
-
         name = 'Github';
         break;
       case "codeberg.org":

@@ -4,7 +4,7 @@ import 'package:zero_browser/client/client.dart';
 import 'package:zero_browser/client/hosts/bluebird.dart';
 import 'package:zero_browser/client/hosts/chrome.dart';
 import 'package:zero_browser/client/hosts/github.dart';
-import 'package:zero_browser/client/hosts/gram.dart';
+import 'package:zero_browser/client/hosts/galleries.dart';
 import 'package:zero_browser/client/hosts/hackernews.dart';
 import 'package:zero_browser/client/hosts/markdown.dart';
 import 'package:zero_browser/client/hosts/redlib.dart';

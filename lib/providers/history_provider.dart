@@ -217,12 +217,14 @@ class TabProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void submitForm(PageData page, String json) {
-    final uri = Uri.parse(page.url);
-    final newUri = uri.replace(
-      queryParameters: {...uri.queryParameters, "form_data": json},
-    );
-
-    navigateWithHistory(newUri.toString());
+  void submitForm(PageData page, FormSection form) {
+    final uri = newFormUri(Uri.parse(page.url), form);
+    navigateWithHistory(uri.toString());
   }
+}
+
+Uri newFormUri(Uri uri, FormSection form) {
+  final query = form.toQuery();
+  uri = uri.replace(queryParameters: query);
+  return uri;
 }
