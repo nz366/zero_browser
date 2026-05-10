@@ -193,7 +193,7 @@ class TabProvider extends ChangeNotifier {
     _tabs.add(
       TabPaneData(
         TabData(
-          page: PageData(url: url, title: url, content: []),
+          page: PageData(url: url, title: cleanUri(url), content: []),
         ),
       ),
     );
@@ -220,6 +220,16 @@ class TabProvider extends ChangeNotifier {
   void submitForm(PageData page, FormSection form) {
     final uri = newFormUri(Uri.parse(page.url), form);
     navigateWithHistory(uri.toString());
+  }
+
+  // remove protocol string
+  String cleanUri(String url) {
+    Uri u = Uri.parse(url);
+    if (u.scheme.isNotEmpty) {
+      url = url.substring(u.scheme.length + 3);
+    }
+
+    return url;
   }
 }
 
