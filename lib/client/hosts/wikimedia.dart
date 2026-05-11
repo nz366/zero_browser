@@ -6,7 +6,10 @@ import 'package:zero_browser/model/data.dart';
 
 class Mediawiki extends RequestTransformer {
   Mediawiki({Uri? uri})
-    : super(host: ['en.wikipedia.org', 'wikimedia.org'], uri: uri ?? Uri());
+    : super(
+        host: ['en.wikipedia.org', 'wikimedia.org', 'wiki.archlinux.org'],
+        uri: uri ?? Uri(),
+      );
 
   @override
   RequestTransformer withUri(Uri uri) => Mediawiki(uri: uri);
@@ -32,7 +35,8 @@ class Mediawiki extends RequestTransformer {
       }
     }
 
-    var mdText = html2md.convert(dom.body?.innerHtml ?? body);
+    final main_content = dom.body?.querySelector("main")?.innerHtml ?? body;
+    var mdText = html2md.convert(main_content);
 
     mdText = mdText.replaceAll(RegExp(r'\.mw-parser-[\s\S]*?\}'), "");
     mdText = mdText.replaceAll(RegExp(r'@media[^{]*\{[\s\S]*?\}'), "");
