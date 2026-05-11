@@ -5,6 +5,7 @@ import 'package:zero_browser/model/data.dart';
 import 'package:zero_browser/ui/tab.dart';
 import 'package:zero_browser/ui/tabpane.dart';
 import 'package:zero_browser/utils/cancel_token.dart';
+import 'package:zero_browser/utils/uri.dart';
 
 class LinkedHistory {
   final String url;
@@ -193,7 +194,7 @@ class TabProvider extends ChangeNotifier {
     _tabs.add(
       TabPaneData(
         TabData(
-          page: PageData(url: url, title: cleanUri(url), content: []),
+          page: PageData(url: url, title: cleanUriString(url), content: []),
         ),
       ),
     );
@@ -220,16 +221,6 @@ class TabProvider extends ChangeNotifier {
   void submitForm(PageData page, FormSection form) {
     final uri = newFormUri(Uri.parse(page.url), form);
     navigateWithHistory(uri.toString());
-  }
-
-  // remove protocol string
-  String cleanUri(String url) {
-    Uri u = Uri.parse(url);
-    if (u.scheme.isNotEmpty) {
-      url = url.substring(u.scheme.length + 3);
-    }
-
-    return url;
   }
 }
 

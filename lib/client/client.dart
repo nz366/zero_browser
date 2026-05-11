@@ -1,10 +1,12 @@
 import 'package:http/http.dart' as http;
 import 'package:html2md/html2md.dart' as html2md;
+import 'package:zero_browser/client/hosts/basichtml.dart';
 import 'package:zero_browser/client/hosts/chrome.dart';
 import 'package:zero_browser/client/hosts/localfile.dart';
 import 'package:zero_browser/client/internal/browser.dart';
 import 'package:zero_browser/model/data.dart';
 import 'package:zero_browser/providers/history_provider.dart';
+import 'package:zero_browser/utils/uri.dart';
 
 class DataResponse {
   final String title;
@@ -55,11 +57,7 @@ abstract class RequestTransformer {
 
     switch (contentType) {
       case "text/html":
-        return DataResponse(
-          body: [MarkdownSection(html2md.convert(response.body))],
-          statusCode: response.statusCode,
-          title: "Page",
-        );
+        return useful_html_content(response);
       case "image/jpeg":
       case "image/png":
       case "image/webp":
@@ -81,7 +79,7 @@ abstract class RequestTransformer {
         return DataResponse(
           body: [MarkdownSection("```$contentType\n ${response.body}\n```")],
           statusCode: response.statusCode,
-          title: "Page",
+          title: "$contentType ${cleanUri(uri)}",
         );
     }
   }
