@@ -28,7 +28,7 @@ class HackernewsRequest extends RequestTransformer {
 
       final item = jsonDecode(itemResponse.body);
       if (item != null && item['type'] == 'story') {
-        final comments = await fetchcomments(item['kids'] ?? []);
+        final comments = await fetchcomments(item['kids'] ?? [], null);
         String markdown = "# ${item['title'] ?? 'No Title'}\n\n";
         if (item['url'] != null) {
           markdown += "Source: (${item['url']})\n\n";
@@ -110,44 +110,83 @@ class HackernewsRequest extends RequestTransformer {
     );
   }
 
-  Future<List<CommentData>> fetchcomments(List<dynamic> items) async {
-    final comments = <CommentData>[];
+  Future<List<CommentData>> fetchcomments(
+    List<dynamic> items,
+    TimeOut? timeout,
+  ) async {
+    var futures = <Future<CommentData>>[];
 
     for (var element in items) {
-      final commentResponse = await http.get(
-        Uri.parse('$firebaseAPI/item/$element.json'),
+      futures.add(
+        Future.microtask(() async {
+          if (timeout != null && timeout.isExpired) {
+            return CommentData(
+              id: element,
+              author: "[System]",
+              content: "Error: Timeout",
+              createdAt: DateTime.now(),
+              replies: [],
+            );
+          }
+          final commentResponse = await http.get(
+            Uri.parse('$firebaseAPI/item/$element.json'),
+          );
+
+          if (commentResponse.statusCode != 200) {
+            return CommentData(
+              id: element,
+              author: "[System]",
+              content: "Error: ${commentResponse.statusCode}",
+              createdAt: DateTime.now(),
+              replies: [],
+            );
+          }
+
+          final comment = jsonDecode(commentResponse.body);
+
+          final kidslist = comment['kids'] ?? [];
+
+          final replies = await fetchcomments(kidslist, timeout);
+
+          if (comment != null && comment['type'] == 'comment') {
+            final htmlmd = html2md
+                .convert(comment['text'] ?? "")
+                .replaceAll(r'\', '');
+
+            return CommentData(
+              content: htmlmd,
+              author: comment['by'] ?? 'unknown',
+              id: element.toString(),
+              createdAt: DateTime.fromMillisecondsSinceEpoch(
+                (comment['time'] ?? 0) * 1000,
+              ),
+              replies: replies,
+            );
+          }
+
+          return CommentData(
+            id: element,
+            author: "[System]",
+            content: "Error: Invalid Comment",
+            createdAt: DateTime.now(),
+            replies: [],
+          );
+        }),
       );
-      if (commentResponse.statusCode != 200) {
-        continue;
-      }
-
-      final comment = jsonDecode(commentResponse.body);
-
-      final kidslist = comment['kids'] ?? [];
-
-      final replies = await fetchcomments(kidslist);
-
-      if (comment != null && comment['type'] == 'comment') {
-        final htmlmd = html2md
-            .convert(comment['text'] ?? "")
-            .replaceAll(r'\', '');
-
-        comments.add(
-          CommentData(
-            content: htmlmd,
-
-            author: comment['by'] ?? 'unknown',
-
-            id: element.toString(),
-            createdAt: DateTime.fromMillisecondsSinceEpoch(
-              (comment['time'] ?? 0) * 1000,
-            ),
-            score: comment['score'] ?? 0,
-            replies: replies,
-          ),
-        );
-      }
     }
-    return comments;
+
+    return Future.wait(futures);
   }
+}
+
+class TimeOut {
+  final Duration? maxDuration;
+
+  TimeOut({this.maxDuration}) : startTime = DateTime.now();
+
+  final DateTime startTime;
+
+  bool get isExpired => maxDuration == null
+      ? false
+      : startTime.add(maxDuration!).isBefore(DateTime.now());
 }
