@@ -166,17 +166,19 @@ List<Widget> generateSlivers(BuildContext context, PageData page) {
             itemBuilder: (c, i) {
               return CommentTree(
                 comment: commentThread.data[i],
-                color: Colors.grey.withAlpha(100),
+                color: Theme.of(context).canvasColor.isDark
+                    ? Colors.grey.shade900
+                    : Colors.grey.shade100,
                 activeColor: Colors.grey.withBlue(200),
                 buildHeader: buildHeader,
-                buildBody: (data) => buildBody(data, context),
+                buildBody: (data) => buildBody(data, context, page),
                 buildEnd: buildEnd,
               );
             },
           ),
         );
       case MarkdownSection markdown:
-        slivers.add(buildMarkdown(markdown.data, context));
+        slivers.add(buildMarkdown(markdown.data, context, page));
 
       case SettingsSliverSection _:
         slivers.add(
@@ -221,6 +223,10 @@ List<Widget> generateSlivers(BuildContext context, PageData page) {
   }
 
   return slivers;
+}
+
+extension on Color {
+  bool get isDark => this.computeLuminance() < 0.179;
 }
 
 Widget buildImageGrid(BuildContext context, ImageGridSection imageGridSection) {
@@ -290,15 +296,15 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
   }
 }
 
-Widget buildMarkdown(element, BuildContext context) {
+Widget buildMarkdown(element, BuildContext context, PageData page) {
   return MarkdownWidget(
     sliverMode: true,
     data: element,
-    config: getMarkdownConfig(context),
+    config: getMarkdownConfig(context, page),
   );
 }
 
-MarkdownConfig getMarkdownConfig(BuildContext context) {
+MarkdownConfig getMarkdownConfig(BuildContext context, PageData page) {
   final config = Theme.of(context).brightness == Brightness.dark
       ? MarkdownConfig.darkConfig
       : MarkdownConfig.defaultConfig;
@@ -312,22 +318,30 @@ MarkdownConfig getMarkdownConfig(BuildContext context) {
       ),
       LinkConfig(
         onTap: (url) {
+          Uri uri = Uri.parse(url);
+
+          if (uri.host.isEmpty) {
+            uri = Uri.parse(
+              "https://${page.sourceUri?.host}${url.startsWith("/") ? "" : "/"}${uri.path}",
+            );
+          }
+
           Provider.of<TabProvider>(
             context,
             listen: false,
-          ).navigateWithHistory(url);
+          ).navigateWithHistory(uri.toString());
         },
       ),
     ],
   );
 }
 
-Widget buildBody(CommentData data, BuildContext context) {
+Widget buildBody(CommentData data, BuildContext context, PageData page) {
   return ConstrainedBox(
     constraints: BoxConstraints(maxHeight: 300),
     child: MarkdownBlock(
       data: data.content,
-      config: getMarkdownConfig(context),
+      config: getMarkdownConfig(context, page),
     ),
   );
 }
