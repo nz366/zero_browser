@@ -249,6 +249,7 @@ class PageData {
   String url;
   String title;
   bool loading;
+  Uri? sourceUri;
   List<Section> content;
 
   PageData({
@@ -256,6 +257,7 @@ class PageData {
     required this.title,
     this.loading = false,
     required this.content,
+    this.sourceUri,
   });
 
   factory PageData.fromJson(Map<String, dynamic> json) {

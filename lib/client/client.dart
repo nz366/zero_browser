@@ -12,26 +12,39 @@ class DataResponse {
   final String title;
   final List<Section> body;
   final int statusCode;
+  final Uri? sourceUri;
 
   DataResponse({
     required this.body,
     required this.statusCode,
     required this.title,
+    this.sourceUri,
   });
 
-  factory DataResponse.fromHttpResponse(http.Response resp, [String? title]) {
+  factory DataResponse.fromHttpResponse(
+    http.Response resp, [
+    String? title,
+    Uri? sourceUri,
+  ]) {
     return DataResponse(
       title: title ?? "Response",
       body: [MarkdownSection(resp.body)],
       statusCode: resp.statusCode,
+      sourceUri: sourceUri,
     );
   }
 
-  DataResponse copyWith({dynamic body, int? statusCode, String? title}) {
+  DataResponse copyWith({
+    List<Section>? body,
+    int? statusCode,
+    String? title,
+    Uri? sourceUri,
+  }) {
     return DataResponse(
       body: body ?? this.body,
       statusCode: statusCode ?? this.statusCode,
       title: title ?? this.title,
+      sourceUri: sourceUri ?? this.sourceUri,
     );
   }
 }
@@ -57,7 +70,7 @@ abstract class RequestTransformer {
 
     switch (contentType) {
       case "text/html":
-        return useful_html_content(response);
+        return useful_html_content(response).copyWith(sourceUri: uri);
       case "image/jpeg":
       case "image/png":
       case "image/webp":
@@ -74,12 +87,14 @@ abstract class RequestTransformer {
           ],
           statusCode: response.statusCode,
           title: "Image",
+          sourceUri: uri,
         );
       default:
         return DataResponse(
           body: [MarkdownSection("```$contentType\n ${response.body}\n```")],
           statusCode: response.statusCode,
           title: "$contentType ${cleanUri(uri)}",
+          sourceUri: uri,
         );
     }
   }
@@ -155,7 +170,7 @@ class RequesterRegistry {
 
 Future<DataResponse> fetchData(TabData tab, String uri) async {
   final resolver = RequesterRegistry.resolve(tab, uri);
-
+  Uri targetUri = Uri.parse(uri);
   try {
     final response = await resolver.getData();
 
@@ -168,6 +183,8 @@ Future<DataResponse> fetchData(TabData tab, String uri) async {
             'Request failed with status: ${response.statusCode}.',
           ),
         ],
+        sourceUri: targetUri,
+        statusCode: response.statusCode,
       );
     }
   } catch (e) {
@@ -175,6 +192,7 @@ Future<DataResponse> fetchData(TabData tab, String uri) async {
       body: [MarkdownSection("Network error ($e)")],
       statusCode: 500,
       title: "Error",
+      sourceUri: targetUri,
     );
   }
 }
