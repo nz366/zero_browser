@@ -227,7 +227,7 @@ Row buildHeader(CommentData data) {
         backgroundColor: Colors.gray,
         child: Text(
           data.author[0],
-          style: const TextStyle(fontSize: 9, color: Colors.white),
+          style: const TextStyle(fontSize: 16, color: Colors.white),
         ),
       ),
       const SizedBox(width: 8),
