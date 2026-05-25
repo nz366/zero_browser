@@ -11,8 +11,13 @@ class BookmarkProvider extends ChangeNotifier {
   }
 
   Future<void> _loadBookmarks() async {
-    _bookmarks = await appDatabase.select(appDatabase.bookmarks).get();
-    notifyListeners();
+    final query = appDatabase.select(appDatabase.bookmarks);
+
+    query.orderBy([
+      (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.asc),
+    ]);
+
+    _bookmarks = await query.get();
   }
 
   bool isBookmarked(String url) {

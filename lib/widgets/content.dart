@@ -144,13 +144,29 @@ List<Widget> generateSlivers(BuildContext context, PageData page) {
           SliverToBoxAdapter(
             child: DataTable(
               columns: tableSection.items.first.keys
-                  .map<DataColumn>((c) => DataColumn(label: Text(c)))
+                  .map<DataColumn>(
+                    (c) => DataColumn(
+                      label: Text(c.toUpperCase()),
+                      columnWidth: FixedColumnWidth(200),
+                    ),
+                  )
                   .toList(),
               rows: tableSection.items
                   .map(
                     (r) => DataRow(
                       cells: r.values
-                          .map<DataCell>((c) => DataCell(Text(c.toString())))
+                          .map<DataCell>(
+                            (c) => DataCell(
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: buildMiniMarkDown(
+                                  c.toString(),
+                                  context,
+                                  page,
+                                ),
+                              ),
+                            ),
+                          )
                           .toList(),
                     ),
                   )
@@ -300,11 +316,11 @@ Widget buildMarkdown(element, BuildContext context, PageData page) {
   return MarkdownWidget(
     sliverMode: true,
     data: element,
-    config: getMarkdownConfig(context, page),
+    config: markdownBrowserConfig(context, page),
   );
 }
 
-MarkdownConfig getMarkdownConfig(BuildContext context, PageData page) {
+MarkdownConfig markdownBrowserConfig(BuildContext context, PageData page) {
   final config = Theme.of(context).brightness == Brightness.dark
       ? MarkdownConfig.darkConfig
       : MarkdownConfig.defaultConfig;
@@ -336,12 +352,19 @@ MarkdownConfig getMarkdownConfig(BuildContext context, PageData page) {
   );
 }
 
+Widget buildMiniMarkDown(String data, BuildContext context, PageData page) {
+  return MarkdownBlock(
+    data: data,
+    config: markdownBrowserConfig(context, page),
+  );
+}
+
 Widget buildBody(CommentData data, BuildContext context, PageData page) {
   return ConstrainedBox(
     constraints: BoxConstraints(maxHeight: 300),
     child: MarkdownBlock(
       data: data.content,
-      config: getMarkdownConfig(context, page),
+      config: markdownBrowserConfig(context, page),
     ),
   );
 }
