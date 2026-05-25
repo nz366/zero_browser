@@ -1,16 +1,19 @@
+import 'package:html/dom.dart';
+import 'package:html/parser.dart';
 import 'package:html2md/html2md.dart' as html2md;
 import 'package:http/http.dart' as http;
 import 'package:zero_browser/client/client.dart';
 import 'package:zero_browser/model/data.dart';
 
-DataResponse useful_html_content(http.Response response) {
-  final string = response.body;
-  // Most websites follows common structure for SEO optimization.
-  final title = RegExp(
-    r'<meta property="og:title" content="(.*?)">',
-  ).allMatches(string).map((e) => e.group(1)).join('');
+String? htmlDocumentTitle(Document document) {
+  return document.querySelector("title")?.text ??
+      document.querySelector("meta[property='og:title']")?.text;
+}
 
-  // <body id="www-wikipedia-org" class=" jsl10n-visible">
+DataResponse usefulHtmlContent(http.Response response, String? fallbackTitle) {
+  final string = response.body;
+  final document = parse(string);
+  final title = htmlDocumentTitle(document);
 
   var mainContent = string.split("<body").last.split("</body>").first;
 
@@ -27,6 +30,6 @@ DataResponse useful_html_content(http.Response response) {
   return DataResponse(
     body: [MarkdownSection(mdText)],
     statusCode: response.statusCode,
-    title: title.isEmpty ? "No Title" : title,
+    title: title ?? fallbackTitle ?? "No Title",
   );
 }

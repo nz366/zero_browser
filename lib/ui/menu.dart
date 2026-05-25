@@ -1,7 +1,7 @@
 import 'package:provider/provider.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:zero_browser/providers/history_provider.dart';
-import 'package:zero_browser/ui/theme_provider.dart';
+import 'package:zero_browser/providers/theme_provider.dart' show ThemeProvider;
 
 void showBrowserTabSettings(BuildContext context) {
   showPopover(
@@ -56,7 +56,7 @@ void showBrowserTabSettings(BuildContext context) {
                         builder: (context, themeProvider, _) {
                           return IconButton.ghost(
                             icon: Icon(
-                              themeProvider.isDark
+                              Theme.of(context).brightness == Brightness.dark
                                   ? LucideIcons.sun
                                   : LucideIcons.moon,
                             ),
@@ -241,7 +241,8 @@ class MenuAction extends StatelessWidget {
   final String? shortcut;
   final VoidCallback onPressed;
 
-  const MenuAction({super.key, 
+  const MenuAction({
+    super.key,
     required this.icon,
     required this.label,
     this.shortcut,

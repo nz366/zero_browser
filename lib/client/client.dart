@@ -69,7 +69,10 @@ abstract class RequestTransformer {
 
     switch (contentType) {
       case "text/html":
-        return useful_html_content(response).copyWith(sourceUri: uri);
+        return usefulHtmlContent(
+          response,
+          uri.toString(),
+        ).copyWith(sourceUri: uri);
       case "image/jpeg":
       case "image/png":
       case "image/webp":

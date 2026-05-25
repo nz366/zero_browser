@@ -3,6 +3,8 @@ import 'package:html/parser.dart';
 import 'package:html2md/html2md.dart' as html2md;
 import 'package:http/http.dart' as http;
 import 'package:zero_browser/client/client.dart';
+import 'package:zero_browser/client/hosts/basichtml.dart'
+    show htmlDocumentTitle;
 import 'package:zero_browser/model/data.dart';
 
 class BlueBirdRequest extends RequestTransformer {
@@ -17,20 +19,14 @@ class BlueBirdRequest extends RequestTransformer {
     final uri = replace_with_fallback(host.first, super.uri);
 
     final response = await http.get(uri);
-
-    //profile div.tweet-body>
-    //
-    //content
-    // body> div.container> main-thread > tweet-content
     final document = parse(response.body);
-
-    final post = read_post(document);
+    final title = htmlDocumentTitle(document);
 
     final replies = read_replies(document);
 
     return DataResponse(
-      title: "Bluebird: $uri",
-      body: [...post, CommentThreadSection(replies)],
+      title: title ?? uri.toString(),
+      body: [CommentThreadSection(replies)],
       statusCode: 200,
       sourceUri: uri,
     );
@@ -51,7 +47,9 @@ List<CommentData> read_replies(Document document) {
       content: html2md.convert(
         e.querySelector("div.tweet-content")?.innerHtml ?? "",
       ),
-      author: e.querySelector("div.fullname-and-username")?.text.trim() ?? "",
+      author: (e.querySelector("div.fullname-and-username")?.text.trim() ?? "")
+          .replaceAll("\n", "")
+          .replaceAll(" ", ""),
       replies: [],
       id:
           e
