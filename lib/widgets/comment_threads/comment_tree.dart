@@ -226,7 +226,8 @@ Row buildHeader(CommentData data) {
         radius: padding10,
         backgroundColor: Colors.gray,
         child: Text(
-          data.author[0],
+          data.author.isEmpty ? "?" : data.author[0],
+
           style: const TextStyle(fontSize: 16, color: Colors.white),
         ),
       ),
