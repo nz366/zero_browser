@@ -6,12 +6,13 @@ import 'package:zero_browser/model/data.dart';
 
 void main() async {
   final htmlfile = await File("test/test.html").readAsString();
-  final useful = useful_html_content(
+  final useful = usefulHtmlContent(
     http.Response(
       htmlfile,
       200,
       headers: {"content-type": "text/html; charset=utf-8"},
     ),
+    "test",
   );
 
   assert(useful.body.length == 2);
