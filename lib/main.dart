@@ -11,7 +11,7 @@ import 'package:zero_browser/client/hosts/redlib.dart';
 import 'package:zero_browser/client/hosts/wikimedia.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:zero_browser/ui/tab.dart';
-import 'package:zero_browser/ui/theme_provider.dart';
+import 'package:zero_browser/providers/theme_provider.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:zero_browser/database/database.dart';
 import 'package:zero_browser/providers/bookmark_provider.dart';
@@ -48,9 +48,11 @@ class BroswserApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.watch<ThemeProvider>().theme;
+    final themeProvider = context.watch<ThemeProvider>();
     return ShadcnApp(
-      theme: theme,
+      themeMode: themeProvider.themeMode,
+      theme: themeProvider.lightTheme,
+      darkTheme: themeProvider.darkTheme,
       debugShowCheckedModeBanner: false,
       home: Scaffold(child: TabPaneProviderExample()),
     );
