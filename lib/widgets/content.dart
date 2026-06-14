@@ -25,170 +25,173 @@ List<Widget> generateSlivers(BuildContext context, PageData page) {
   final content = page.content;
   List<Widget> slivers = [];
   for (var element in content) {
-    slivers.add(sectionToSliver(context, page, element));
+    slivers.add(sectionToWidget(context, page, element, true));
   }
   return slivers;
 }
 
-Widget sectionToSliver(BuildContext context, PageData page, Section element) {
+Widget wrapsliver(Widget box, bool useSliverAdapter) {
+  return useSliverAdapter ? SliverToBoxAdapter(child: box) : box;
+}
+
+Widget sectionToWidget(
+  BuildContext context,
+  PageData page,
+  Section element,
+  bool useSliverAdapter,
+) {
   return switch (element) {
     CenteredSection centered => SliverToBoxAdapter(
+      child: ConstrainedBox(
+        constraints: BoxConstraints.expand(
+          height: MediaQuery.of(context).size.height * 0.8,
+        ),
         child: Center(
-          child: Builder(
-            builder: (context) {
-              final slivers = generateSlivers(context, page);
-              return Column(children: slivers);
-            },
-          ),
+          child: sectionToWidget(context, page, centered.section, false),
         ),
       ),
+    ),
     ArticleListSection articleList => switch (articleList.layout) {
-        LayoutConfig.masonry => const SliverToBoxAdapter(
-            child: SizedBox.shrink(),
-          ),
-        LayoutConfig.grid => SliverGrid.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 5,
-            ),
-            itemCount: articleList.articles.length,
-            itemBuilder: (context, i) {
-              final article = articleList.articles[i];
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: GestureDetector(
-                  onTap: () {
-                    Provider.of<TabProvider>(
-                      context,
-                      listen: false,
-                    ).openTab(article.url);
-                  },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ThumbnailWidget(
-                        url: article.thumbnail ?? article.url,
-                      ),
-                      Tooltip(
-                        tooltip: TooltipContainer(
-                          child: Text(article.title),
-                        ),
-                        child: Text(
-                          article.title,
-                          style: Theme.of(context).typography.medium,
-                          maxLines: 1,
-                        ),
-                      ),
-                    ],
+      LayoutConfig.masonry => wrapsliver(SizedBox.shrink(), useSliverAdapter),
+      LayoutConfig.grid => SliverGrid.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 5,
+        ),
+        itemCount: articleList.articles.length,
+        itemBuilder: (context, i) {
+          final article = articleList.articles[i];
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: GestureDetector(
+              onTap: () {
+                Provider.of<TabProvider>(
+                  context,
+                  listen: false,
+                ).openTab(article.url);
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ThumbnailWidget(url: article.thumbnail ?? article.url),
+                  Tooltip(
+                    tooltip: TooltipContainer(child: Text(article.title)),
+                    child: Text(
+                      article.title,
+                      style: Theme.of(context).typography.medium,
+                      maxLines: 1,
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
-        LayoutConfig.list => SliverList.builder(
-            itemCount: articleList.articles.length,
-            itemBuilder: (context, i) {
-              final article = articleList.articles[i];
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: GestureDetector(
-                  onTap: () {
-                    Provider.of<TabProvider>(
-                      context,
-                      listen: false,
-                    ).openTab(article.url);
-                  },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        article.title,
-                        style: Theme.of(context).typography.h4,
-                        maxLines: 1,
-                      ),
-                      Text(
-                        "${article.subgroup} • ${article.author} • ${article.upvotes} UP",
-                        style: Theme.of(context).typography.base.copyWith(
-                          fontSize: Theme.of(
-                            context,
-                          ).typography.small.fontSize,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        LayoutConfig.table => const SliverToBoxAdapter(
-            child: SizedBox.shrink(),
-          ),
-      },
-    TableSection tableSection => SliverToBoxAdapter(
-        child: tableSection.items.isEmpty
-            ? const SizedBox.shrink()
-            : Table(
-                rows: tableSection.items
-                    .map(
-                      (r) => TableRow(
-                        cells: r.values
-                            .map<TableCell>(
-                              (c) => TableCell(
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: buildMiniMarkDown(
-                                    c.toString(),
-                                    context,
-                                    page,
-                                  ),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                    )
-                    .toList(),
+                ],
               ),
-      ),
-    CommentThreadSection commentThread => SliverList.builder(
-        itemCount: commentThread.data.length,
-        itemBuilder: (c, i) {
-          return CommentTree(
-            comment: commentThread.data[i],
-            color: Theme.of(context).colorScheme.border,
-            activeColor: Colors.gray.withBlue(200),
-            buildHeader: buildHeader,
-            buildBody: (data) => buildBody(data, context, page),
-            buildEnd: buildEnd,
+            ),
           );
         },
       ),
+      LayoutConfig.list => SliverList.builder(
+        itemCount: articleList.articles.length,
+        itemBuilder: (context, i) {
+          final article = articleList.articles[i];
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: GestureDetector(
+              onTap: () {
+                Provider.of<TabProvider>(
+                  context,
+                  listen: false,
+                ).openTab(article.url);
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    article.title,
+                    style: Theme.of(context).typography.h4,
+                    maxLines: 1,
+                  ),
+                  Text(
+                    "${article.subgroup} • ${article.author} • ${article.upvotes} UP",
+                    style: Theme.of(context).typography.base.copyWith(
+                      fontSize: Theme.of(context).typography.small.fontSize,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+      LayoutConfig.table => const SliverToBoxAdapter(child: SizedBox.shrink()),
+    },
+    TableSection tableSection => wrapsliver(
+      tableSection.items.isEmpty
+          ? const SizedBox.shrink()
+          : Table(
+              rows: tableSection.items
+                  .map(
+                    (r) => TableRow(
+                      cells: r.values
+                          .map<TableCell>(
+                            (c) => TableCell(
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: buildMiniMarkDown(
+                                  c.toString(),
+                                  context,
+                                  page,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  )
+                  .toList(),
+            ),
+      useSliverAdapter,
+    ),
+    CommentThreadSection commentThread => SliverList.builder(
+      itemCount: commentThread.data.length,
+      itemBuilder: (c, i) {
+        return CommentTree(
+          comment: commentThread.data[i],
+          color: Theme.of(context).colorScheme.border,
+          activeColor: Colors.gray.withBlue(200),
+          buildHeader: buildHeader,
+          buildBody: (data) => buildBody(data, context, page),
+          buildEnd: buildEnd,
+        );
+      },
+    ),
     MarkdownSection markdown => buildMarkdown(markdown.data, context, page),
-    SettingsSliverSection _ => const SliverToBoxAdapter(
-        child: SizedBox(
-          height: 1000,
-          child: Column(children: [Text("Settings")]),
+    SettingsSliverSection _ => wrapsliver(
+      SizedBox(height: 1000, child: Column(children: [Text("Settings")])),
+      useSliverAdapter,
+    ),
+    ImageGridSection imageGridSection => buildImageGrid(
+      context,
+      imageGridSection,
+    ),
+    FormSection formSection => wrapsliver(
+      FormSectionWidget(formSection: formSection, page: page),
+      useSliverAdapter,
+    ),
+    MediaSection mediaSection => wrapsliver(
+      SizedBox(
+        height: MediaQuery.of(context).size.height * 0.8,
+        child: CarouselView(
+          children: mediaSection.items.map((e) {
+            final String start = String.fromCharCodes(
+              e.take(100),
+            ).toLowerCase();
+            if (start.contains('<svg') || start.contains('<?xml')) {
+              return SvgPicture.memory(e, fit: BoxFit.cover);
+            }
+            return Image.memory(e, fit: BoxFit.cover);
+          }).toList(),
         ),
       ),
-    ImageGridSection imageGridSection => buildImageGrid(context, imageGridSection),
-    FormSection formSection => SliverToBoxAdapter(
-        child: FormSectionWidget(formSection: formSection, page: page),
-      ),
-    MediaSection mediaSection => SliverToBoxAdapter(
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height * 0.8,
-          child: CarouselView(
-            children: mediaSection.items.map((e) {
-              final String start = String.fromCharCodes(
-                e.take(100),
-              ).toLowerCase();
-              if (start.contains('<svg') || start.contains('<?xml')) {
-                return SvgPicture.memory(e, fit: BoxFit.cover);
-              }
-              return Image.memory(e, fit: BoxFit.cover);
-            }).toList(),
-          ),
-        ),
-      ),
+      useSliverAdapter,
+    ),
   };
 }
 

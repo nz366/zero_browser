@@ -70,9 +70,11 @@ class GramRequest extends RequestTransformer {
     } else {
       return DataResponse(
         body: [
-          FormSection(
-            title: 'search',
-            fields: {'search': TextField(name: 'search', hint: 'Search')},
+          CenteredSection(
+            FormSection(
+              title: 'search',
+              fields: {'search': TextField(name: 'search', hint: 'Search')},
+            ),
           ),
         ],
         statusCode: 200,

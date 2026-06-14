@@ -243,6 +243,23 @@ class ArticleListSection extends Section {
   }
 }
 
+class CenteredSection extends Section {
+  final Section section;
+  const CenteredSection(this.section);
+
+  factory CenteredSection.fromJson(Map<String, dynamic> json) {
+    return CenteredSection(
+      Section.fromJson(json['data'] as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'type': 'centered',
+    'data': section.toJson(),
+  };
+}
+
 enum LayoutConfig { table, list, grid, masonry }
 
 class PageData {
@@ -293,6 +310,7 @@ class PageData {
             SettingsSliverSection s => s.data,
             FormSection s => s.toJson().toString(),
             MediaSection s => s.items.toString(),
+            CenteredSection s => s.section.toJson().toString(),
           };
         })
         .join("\n");

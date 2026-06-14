@@ -15,8 +15,10 @@ class GiteaRequest extends RequestTransformer {
     if (uri.path == "") {
       return DataResponse(
         body: [
-          FormSection(
-            fields: {"search": TextField(name: "search", label: "Search")},
+          CenteredSection(
+            FormSection(
+              fields: {"search": TextField(name: "search", label: "Search")},
+            ),
           ),
         ],
         statusCode: 200,

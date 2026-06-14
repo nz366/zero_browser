@@ -51,14 +51,13 @@ class _FormSectionState extends State<FormSectionWidget> {
       child: Form(
         onSubmit: onSubmit,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
+          // crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            FormTableLayout(
-              rows: widget.formSection.fields.entries.map((entry) {
-                return _buildFormField(entry.value);
-              }).toList(),
-            ),
+            ...widget.formSection.fields.entries.map((entry) {
+              return _buildFormField(entry.value);
+            }),
             const Gap(24),
             const SubmitButton(child: Text('Submit')),
           ],
