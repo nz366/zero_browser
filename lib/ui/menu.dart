@@ -241,7 +241,7 @@ class MenuAction extends StatelessWidget {
   final String? shortcut;
   final VoidCallback onPressed;
 
-  const MenuAction({
+  const MenuAction({super.key, 
     required this.icon,
     required this.label,
     this.shortcut,

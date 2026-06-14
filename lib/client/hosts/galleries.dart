@@ -65,7 +65,7 @@ class GramRequest extends RequestTransformer {
           ),
         ],
         statusCode: resp.statusCode,
-        title: "${search} Instagram",
+        title: "$search Instagram",
       );
     } else {
       return DataResponse(

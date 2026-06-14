@@ -23,7 +23,7 @@ class RedlibRequest extends RequestTransformer {
     http.Response? data;
 
     for (var host in fallbacks) {
-      final fallbackuri = Uri.parse("https://" + host + uri.path);
+      final fallbackuri = Uri.parse("https://$host${uri.path}");
 
       final fallbackresp = await http.get(fallbackuri);
 
@@ -51,7 +51,7 @@ class RedlibRequest extends RequestTransformer {
     if (uri.path.contains("/r/")) {
       List threads = parsedhtml.getElementsByClassName("thread");
 
-      List<CommentData> comments_list = [];
+      List<CommentData> commentsList = [];
       for (var thread in threads) {
         // thread > comment > comment_right > replies > comment > comment_right > comment_body
 
@@ -59,27 +59,27 @@ class RedlibRequest extends RequestTransformer {
           continue;
         }
         final comments = recursive_commentparse(thread.children[0]);
-        comments_list.add(comments);
+        commentsList.add(comments);
       }
 
       return DataResponse(
-        body: [CommentThreadSection(comments_list)],
+        body: [CommentThreadSection(commentsList)],
         statusCode: response.statusCode,
         title: "Reddit Thread",
       );
     }
 
-    List<Article> post_data = [];
+    List<Article> postData = [];
     final posts = parsedhtml.getElementById("posts");
 
     if (posts != null) {
-      final post_list = posts.getElementsByClassName("post");
+      final postList = posts.getElementsByClassName("post");
 
-      for (var post in post_list) {
+      for (var post in postList) {
         final chld = post.children;
 
         final _ = chld;
-        post_data.add(
+        postData.add(
           Article(
             title: post.getElementsByClassName("post_title")[0].text.trim(),
             content: post.getElementsByClassName("post_body")[0].text.trim(),
@@ -109,7 +109,7 @@ class RedlibRequest extends RequestTransformer {
         ArticleListSection(
           title: "Homepage",
           layout: LayoutConfig.list,
-          articles: post_data,
+          articles: postData,
         ),
       ],
       statusCode: response.statusCode,
@@ -119,16 +119,16 @@ class RedlibRequest extends RequestTransformer {
 }
 
 CommentData recursive_commentparse(html.Element comment) {
-  List<CommentData> parsed_replies = [];
+  List<CommentData> parsedReplies = [];
   final replies = comment.getElementsByClassName("replies");
 
   if (replies.isNotEmpty) {
-    final reply_list = replies[0].getElementsByClassName("comment");
-    for (var reply in reply_list) {
+    final replyList = replies[0].getElementsByClassName("comment");
+    for (var reply in replyList) {
       try {
-        parsed_replies.add(recursive_commentparse(reply));
+        parsedReplies.add(recursive_commentparse(reply));
       } catch (e) {
-        parsed_replies.add(
+        parsedReplies.add(
           CommentData(
             id: "Error",
             author: "",
@@ -151,7 +151,7 @@ CommentData recursive_commentparse(html.Element comment) {
     createdAt:
         DateTime.tryParse(comment.getElementsByClassName("created")[0].text) ??
         DateTime(2017),
-    replies: parsed_replies,
+    replies: parsedReplies,
   );
 }
 

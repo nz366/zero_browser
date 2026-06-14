@@ -35,8 +35,8 @@ class Mediawiki extends RequestTransformer {
       }
     }
 
-    final main_content = dom.body?.querySelector("main")?.innerHtml ?? body;
-    var mdText = html2md.convert(main_content);
+    final mainContent = dom.body?.querySelector("main")?.innerHtml ?? body;
+    var mdText = html2md.convert(mainContent);
 
     mdText = mdText.replaceAll(RegExp(r'\.mw-parser-[\s\S]*?\}'), "");
     mdText = mdText.replaceAll(RegExp(r'@media[^{]*\{[\s\S]*?\}'), "");

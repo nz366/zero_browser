@@ -242,7 +242,7 @@ List<Widget> generateSlivers(BuildContext context, PageData page) {
 }
 
 extension on Color {
-  bool get isDark => this.computeLuminance() < 0.179;
+  bool get isDark => computeLuminance() < 0.179;
 }
 
 Widget buildImageGrid(BuildContext context, ImageGridSection imageGridSection) {
@@ -275,7 +275,7 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
       errorBuilder: (c, e, s) {
         if (e is ArgumentError) {
           if (url.startsWith("//")) {
-            return ThumbnailWidget(url: "https:" + url);
+            return ThumbnailWidget(url: "https:$url");
           }
 
           if (url.contains('data:')) {

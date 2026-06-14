@@ -54,6 +54,9 @@ dependencies:
   syntax_highlight: ^0.5.0
   flutter_svg: ^2.2.4
 
+  sqlite3: any
+  scroll_to_index: any
+  visibility_detector: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

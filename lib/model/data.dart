@@ -80,7 +80,7 @@ class Article {
     );
   }
 
-  toJson() {
+  Map<String, Object?> toJson() {
     return {
       "title": title,
       "content": content,

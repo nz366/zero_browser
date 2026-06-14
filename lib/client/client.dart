@@ -1,5 +1,4 @@
 import 'package:http/http.dart' as http;
-import 'package:html2md/html2md.dart' as html2md;
 import 'package:zero_browser/client/hosts/basichtml.dart';
 import 'package:zero_browser/client/hosts/chrome.dart';
 import 'package:zero_browser/client/hosts/localfile.dart';

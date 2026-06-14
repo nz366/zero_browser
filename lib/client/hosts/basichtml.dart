@@ -12,17 +12,17 @@ DataResponse useful_html_content(http.Response response) {
 
   // <body id="www-wikipedia-org" class=" jsl10n-visible">
 
-  var main_content = string.split("<body").last.split("</body>").first;
+  var mainContent = string.split("<body").last.split("</body>").first;
 
-  final firstindex = main_content.indexOf(">");
+  final firstindex = mainContent.indexOf(">");
 
-  main_content = main_content.substring(firstindex + 1, main_content.length);
+  mainContent = mainContent.substring(firstindex + 1, mainContent.length);
 
   // final main_content = RegExp(
   //   r'<body[^>]*>(.*?)</body>',
   //   multiLine: true,
   // ).allMatches(string).map((e) => e.group(1)).join('');
-  var mdText = html2md.convert(main_content);
+  var mdText = html2md.convert(mainContent);
 
   return DataResponse(
     body: [MarkdownSection(mdText)],

@@ -1,15 +1,15 @@
 import 'package:zero_browser/model/data.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 
-main() {
-  final test_query = FormSection(
+void main() {
+  final testQuery = FormSection(
     title: "query_title",
     fields: {"search": TextField(name: "search", label: "Search")},
   );
 
-  test_query.fields["search"]?.value = "Hello World!";
+  testQuery.fields["search"]?.value = "Hello World!";
 
-  final uri = newFormUri(Uri.parse("https://example.com"), test_query);
+  final uri = newFormUri(Uri.parse("https://example.com"), testQuery);
 
   assert(uri.queryParameters.containsKey("search"));
 

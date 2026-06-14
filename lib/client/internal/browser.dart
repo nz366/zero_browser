@@ -26,7 +26,6 @@ class BrowserRequest extends RequestTransformer {
 
 ''';
 
-  @override
   BrowserRequest({Uri? uri})
     : super(uri: uri ?? Uri.parse("browser:newtab"), host: ["*"]);
 

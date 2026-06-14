@@ -35,7 +35,7 @@ class MarkdownWidget extends StatefulWidget {
   final bool sliverMode;
 
   const MarkdownWidget({
-    Key? key,
+    super.key,
     required this.data,
     this.tocController,
     this.physics,
@@ -45,7 +45,7 @@ class MarkdownWidget extends StatefulWidget {
     this.padding,
     this.config,
     this.markdownGenerator,
-  }) : super(key: key);
+  });
 
   @override
   MarkdownWidgetState createState() => MarkdownWidgetState();
@@ -192,7 +192,7 @@ Widget wrapByAutoScroll(
     key: Key(index.toString()),
     controller: controller,
     index: index,
-    child: child,
     highlightColor: Colors.black.toOpacity(0.1),
+    child: child,
   );
 }

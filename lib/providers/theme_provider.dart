@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart'; // Required for Value()
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:zero_browser/database/database.dart';

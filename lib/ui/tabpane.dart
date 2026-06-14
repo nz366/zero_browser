@@ -545,7 +545,7 @@ class TabPaneState<T> extends State<TabPane<T>> {
                                         widget.focused == index + 1;
 
                                     if (index == children.length - 1) {
-                                      if (widget.onAdd != null)
+                                      if (widget.onAdd != null) {
                                         return Padding(
                                           padding: EdgeInsets.symmetric(
                                             vertical: densityGap * 0.25,
@@ -557,6 +557,7 @@ class TabPaneState<T> extends State<TabPane<T>> {
                                             onPressed: widget.onAdd,
                                           ),
                                         );
+                                      }
                                     }
                                     if (!beforeIsFocused && !afterIsFocused) {
                                       return VerticalDivider(
