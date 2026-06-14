@@ -69,7 +69,10 @@ class BrowserRequest extends RequestTransformer {
             .toList();
 
         return DataResponse(
-          body: [TableSection(items: items)],
+          body: [
+            MarkdownSection("# Bookmarks"),
+            TableSection(items: items),
+          ],
           statusCode: 200,
           title: "Bookmarks",
         );

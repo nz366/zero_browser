@@ -1,14 +1,10 @@
 import 'dart:convert';
-
-import 'package:flutter/material.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:provider/provider.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart' show LucideIcons;
-import 'package:waterfall_flow/waterfall_flow.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:zero_browser/model/data.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
 import 'package:zero_browser/widgets/comment_threads/comment_tree.dart';
 import 'package:zero_browser/widgets/forms.dart';
 
@@ -34,6 +30,9 @@ List<Widget> generateSlivers(BuildContext context, PageData page) {
       case ArticleListSection articleList:
         switch (articleList.layout) {
           case LayoutConfig.masonry:
+          //       gridDelegate: SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(
+          //         maxCrossAxisExtent: 300,
+          //       ),
           case LayoutConfig.grid:
             slivers.add(
               SliverGrid.builder(
@@ -59,10 +58,12 @@ List<Widget> generateSlivers(BuildContext context, PageData page) {
                             url: article.thumbnail ?? article.url,
                           ),
                           Tooltip(
-                            message: article.title,
+                            tooltip: TooltipContainer(
+                              child: Text(article.title),
+                            ),
                             child: Text(
                               article.title,
-                              style: Theme.of(context).textTheme.bodyMedium,
+                              style: Theme.of(context).typography.medium,
                               maxLines: 1,
                             ),
                           ),
@@ -95,18 +96,17 @@ List<Widget> generateSlivers(BuildContext context, PageData page) {
                         children: [
                           Text(
                             article.title,
-                            style: Theme.of(context).textTheme.headlineSmall,
+                            style: Theme.of(context).typography.h4,
                             maxLines: 1,
                           ),
                           Text(
                             "${article.subgroup} • ${article.author} • ${article.upvotes} UP",
 
-                            style: Theme.of(context).textTheme.headlineMedium
-                                ?.copyWith(
-                                  fontSize: Theme.of(
-                                    context,
-                                  ).textTheme.bodySmall?.fontSize,
-                                ),
+                            style: Theme.of(context).typography.base.copyWith(
+                              fontSize: Theme.of(
+                                context,
+                              ).typography.small.fontSize,
+                            ),
                           ),
                         ],
                       ),
@@ -119,59 +119,43 @@ List<Widget> generateSlivers(BuildContext context, PageData page) {
 
           case LayoutConfig.table:
             break;
-
-          case LayoutConfig.masonry:
-            slivers.add(
-              WaterfallFlow.builder(
-                gridDelegate: SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 300,
-                ),
-                itemBuilder: (c, i) {
-                  return ThumbnailWidget(
-                    url:
-                        articleList.articles[i].thumbnail ??
-                        articleList.articles[i].url,
-                  );
-                },
-              ),
-            );
-
-            break;
         }
 
       case TableSection tableSection:
         slivers.add(
           SliverToBoxAdapter(
-            child: DataTable(
-              columns: tableSection.items.first.keys
-                  .map<DataColumn>(
-                    (c) => DataColumn(
-                      label: Text(c.toUpperCase()),
-                      columnWidth: FixedColumnWidth(200),
-                    ),
-                  )
-                  .toList(),
-              rows: tableSection.items
-                  .map(
-                    (r) => DataRow(
-                      cells: r.values
-                          .map<DataCell>(
-                            (c) => DataCell(
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: buildMiniMarkDown(
-                                  c.toString(),
-                                  context,
-                                  page,
-                                ),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  )
-                  .toList(),
-            ),
+            child: tableSection.items.isEmpty
+                ? SizedBox.shrink()
+                : Table(
+                    // columns: tableSection.columns
+                    //     .map<DataColumn>(
+                    //       (c) => DataColumn(
+                    //         label: Text(c.toUpperCase()),
+                    //         columnWidth: FixedColumnWidth(200),
+                    //       ),
+                    //     )
+                    //     .toList(),
+                    rows: tableSection.items
+                        .map(
+                          (r) => TableRow(
+                            cells: r.values
+                                .map<TableCell>(
+                                  (c) => TableCell(
+                                    child: SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: buildMiniMarkDown(
+                                        c.toString(),
+                                        context,
+                                        page,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        )
+                        .toList(),
+                  ),
           ),
         );
 
@@ -182,10 +166,8 @@ List<Widget> generateSlivers(BuildContext context, PageData page) {
             itemBuilder: (c, i) {
               return CommentTree(
                 comment: commentThread.data[i],
-                color: Theme.of(context).canvasColor.isDark
-                    ? Colors.grey.shade900
-                    : Colors.grey.shade100,
-                activeColor: Colors.grey.withBlue(200),
+                color: Theme.of(context).colorScheme.border,
+                activeColor: Colors.gray.withBlue(200),
                 buildHeader: buildHeader,
                 buildBody: (data) => buildBody(data, context, page),
                 buildEnd: buildEnd,
@@ -220,8 +202,7 @@ List<Widget> generateSlivers(BuildContext context, PageData page) {
             child: SizedBox(
               height: MediaQuery.of(context).size.height * 0.8,
               child: CarouselView(
-                itemExtent: MediaQuery.of(context).size.width * 0.8,
-
+                // itemExtent: MediaQuery.of(context).size.width * 0.8,
                 children: mediaSection.items.map((e) {
                   final String start = String.fromCharCodes(
                     e.take(100),
@@ -239,10 +220,6 @@ List<Widget> generateSlivers(BuildContext context, PageData page) {
   }
 
   return slivers;
-}
-
-extension on Color {
-  bool get isDark => computeLuminance() < 0.179;
 }
 
 Widget buildImageGrid(BuildContext context, ImageGridSection imageGridSection) {
@@ -304,7 +281,9 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
         }
 
         return Tooltip(
-          message: "${e.toString()}\n${s.toString()}",
+          tooltip: TooltipContainer(
+            child: Text("${e.toString()}\n${s.toString()}"),
+          ),
           child: Icon(LucideIcons.imageOff),
         );
       },
@@ -367,4 +346,30 @@ Widget buildBody(CommentData data, BuildContext context, PageData page) {
       config: markdownBrowserConfig(context, page),
     ),
   );
+}
+
+class CarouselView extends StatefulWidget {
+  const CarouselView({super.key, required this.children});
+
+  final List<Widget> children;
+  @override
+  State<CarouselView> createState() => _CarouselViewState();
+}
+
+class _CarouselViewState extends State<CarouselView> {
+  final CarouselController controller = CarouselController();
+  @override
+  Widget build(BuildContext context) {
+    return Carousel(
+      transition: const CarouselTransition.sliding(gap: 24),
+      controller: controller,
+      sizeConstraint: const CarouselFixedConstraint(200),
+      autoplaySpeed: const Duration(seconds: 2),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return widget.children[index];
+      },
+      duration: const Duration(seconds: 1),
+    );
+  }
 }

@@ -304,6 +304,7 @@ class TableSection extends Section {
 
   TableSection({required this.items});
 
+  List<String> get columns => items.firstOrNull?.keys.toList() ?? [];
   @override
   Map<String, dynamic> toJson() {
     return {
@@ -313,7 +314,8 @@ class TableSection extends Section {
   }
 
   factory TableSection.fromJson(Map<String, dynamic> json) {
-    return TableSection(items: json['items'] as List<dynamic>);
+    final items = json['items'] as List<dynamic>;
+    return TableSection(items: items);
   }
 }
 
