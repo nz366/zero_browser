@@ -54,7 +54,7 @@ class BroswserApp extends StatelessWidget {
       theme: themeProvider.lightTheme,
       darkTheme: themeProvider.darkTheme,
       debugShowCheckedModeBanner: false,
-      home: Scaffold(child: TabPaneProviderExample()),
+      home: Scaffold(child: TabPaneWidget()),
     );
   }
 }

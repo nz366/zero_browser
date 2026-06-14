@@ -370,7 +370,7 @@ class TabPaneState<T> extends State<TabPane<T>> {
             .optionallyResolve(context);
     return Builder(
       builder: (context) {
-        var tabGhost = Data.maybeOf<_TabGhostData>(context);
+        // var tabGhost = Data.maybeOf<_TabGhostData>(context);
         return SizedBox(
           height: double.infinity,
           child: CustomPaint(

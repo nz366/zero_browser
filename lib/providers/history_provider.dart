@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' hide TabPaneData;
+import 'package:uuid/uuid.dart';
 import 'package:zero_browser/client/client.dart';
 import 'package:zero_browser/model/data.dart';
-import 'package:zero_browser/ui/tab.dart';
 import 'package:zero_browser/ui/tabpane.dart';
 import 'package:zero_browser/utils/cancel_token.dart';
 import 'package:zero_browser/utils/uri.dart';
+
+final uuid = Uuid();
 
 class LinkedHistory {
   final String url;

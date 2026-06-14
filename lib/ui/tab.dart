@@ -8,15 +8,10 @@ import 'package:zero_browser/ui/menu.dart';
 import 'package:zero_browser/ui/tabpane.dart';
 import 'package:zero_browser/widgets/code.dart';
 import 'package:zero_browser/widgets/content.dart';
-import 'package:uuid/uuid.dart';
 import 'package:zero_browser/providers/bookmark_provider.dart';
 
-final uuid = Uuid();
-
-// PageData is now imported from model/data.dart
-
-class TabPaneProviderExample extends StatelessWidget {
-  const TabPaneProviderExample({super.key});
+class TabPaneWidget extends StatelessWidget {
+  const TabPaneWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
