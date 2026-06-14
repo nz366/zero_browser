@@ -24,202 +24,172 @@ class ContentView extends StatelessWidget {
 List<Widget> generateSlivers(BuildContext context, PageData page) {
   final content = page.content;
   List<Widget> slivers = [];
-
   for (var element in content) {
-    switch (element) {
-      case ArticleListSection articleList:
-        switch (articleList.layout) {
-          case LayoutConfig.masonry:
-          //       gridDelegate: SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(
-          //         maxCrossAxisExtent: 300,
-          //       ),
-          case LayoutConfig.grid:
-            slivers.add(
-              SliverGrid.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 5,
-                ),
-                itemCount: articleList.articles.length,
-                itemBuilder: (context, i) {
-                  final article = articleList.articles[i];
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: GestureDetector(
-                      onTap: () {
-                        Provider.of<TabProvider>(
-                          context,
-                          listen: false,
-                        ).openTab(article.url);
-                      },
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ThumbnailWidget(
-                            url: article.thumbnail ?? article.url,
-                          ),
-                          Tooltip(
-                            tooltip: TooltipContainer(
-                              child: Text(article.title),
-                            ),
-                            child: Text(
-                              article.title,
-                              style: Theme.of(context).typography.medium,
-                              maxLines: 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            );
-            break;
+    slivers.add(sectionToSliver(context, page, element));
+  }
+  return slivers;
+}
 
-          case LayoutConfig.list:
-            slivers.add(
-              SliverList.builder(
-                itemCount: articleList.articles.length,
-                itemBuilder: (context, i) {
-                  final article = articleList.articles[i];
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: GestureDetector(
-                      onTap: () {
-                        Provider.of<TabProvider>(
-                          context,
-                          listen: false,
-                        ).openTab(article.url);
-                      },
-                      child: Column(
-                        crossAxisAlignment: .start,
-                        children: [
-                          Text(
-                            article.title,
-                            style: Theme.of(context).typography.h4,
-                            maxLines: 1,
-                          ),
-                          Text(
-                            "${article.subgroup} • ${article.author} • ${article.upvotes} UP",
-
-                            style: Theme.of(context).typography.base.copyWith(
-                              fontSize: Theme.of(
-                                context,
-                              ).typography.small.fontSize,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            );
-            break;
-
-          case LayoutConfig.table:
-            break;
-        }
-
-      case TableSection tableSection:
-        slivers.add(
-          SliverToBoxAdapter(
-            child: tableSection.items.isEmpty
-                ? SizedBox.shrink()
-                : Table(
-                    // columns: tableSection.columns
-                    //     .map<DataColumn>(
-                    //       (c) => DataColumn(
-                    //         label: Text(c.toUpperCase()),
-                    //         columnWidth: FixedColumnWidth(200),
-                    //       ),
-                    //     )
-                    //     .toList(),
-                    rows: tableSection.items
-                        .map(
-                          (r) => TableRow(
-                            cells: r.values
-                                .map<TableCell>(
-                                  (c) => TableCell(
-                                    child: SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: buildMiniMarkDown(
-                                        c.toString(),
-                                        context,
-                                        page,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                        )
-                        .toList(),
-                  ),
+Widget sectionToSliver(BuildContext context, PageData page, Section element) {
+  return switch (element) {
+    CenteredSection centered => SliverToBoxAdapter(
+        child: Center(
+          child: Builder(
+            builder: (context) {
+              final slivers = generateSlivers(context, page);
+              return Column(children: slivers);
+            },
           ),
-        );
-
-      case CommentThreadSection commentThread:
-        slivers.add(
-          SliverList.builder(
-            itemCount: commentThread.data.length,
-            itemBuilder: (c, i) {
-              return CommentTree(
-                comment: commentThread.data[i],
-                color: Theme.of(context).colorScheme.border,
-                activeColor: Colors.gray.withBlue(200),
-                buildHeader: buildHeader,
-                buildBody: (data) => buildBody(data, context, page),
-                buildEnd: buildEnd,
+        ),
+      ),
+    ArticleListSection articleList => switch (articleList.layout) {
+        LayoutConfig.masonry => const SliverToBoxAdapter(
+            child: SizedBox.shrink(),
+          ),
+        LayoutConfig.grid => SliverGrid.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 5,
+            ),
+            itemCount: articleList.articles.length,
+            itemBuilder: (context, i) {
+              final article = articleList.articles[i];
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GestureDetector(
+                  onTap: () {
+                    Provider.of<TabProvider>(
+                      context,
+                      listen: false,
+                    ).openTab(article.url);
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ThumbnailWidget(
+                        url: article.thumbnail ?? article.url,
+                      ),
+                      Tooltip(
+                        tooltip: TooltipContainer(
+                          child: Text(article.title),
+                        ),
+                        child: Text(
+                          article.title,
+                          style: Theme.of(context).typography.medium,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               );
             },
           ),
-        );
-      case MarkdownSection markdown:
-        slivers.add(buildMarkdown(markdown.data, context, page));
-
-      case SettingsSliverSection _:
-        slivers.add(
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: 1000,
-              child: Column(children: [Text("Settings")]),
-            ),
+        LayoutConfig.list => SliverList.builder(
+            itemCount: articleList.articles.length,
+            itemBuilder: (context, i) {
+              final article = articleList.articles[i];
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GestureDetector(
+                  onTap: () {
+                    Provider.of<TabProvider>(
+                      context,
+                      listen: false,
+                    ).openTab(article.url);
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        article.title,
+                        style: Theme.of(context).typography.h4,
+                        maxLines: 1,
+                      ),
+                      Text(
+                        "${article.subgroup} • ${article.author} • ${article.upvotes} UP",
+                        style: Theme.of(context).typography.base.copyWith(
+                          fontSize: Theme.of(
+                            context,
+                          ).typography.small.fontSize,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
-        );
-      case ImageGridSection imageGridSection:
-        slivers.add(buildImageGrid(context, imageGridSection));
-
-      case FormSection formSection:
-        slivers.add(
-          SliverToBoxAdapter(
-            child: FormSectionWidget(formSection: formSection, page: page),
+        LayoutConfig.table => const SliverToBoxAdapter(
+            child: SizedBox.shrink(),
           ),
-        );
-      case MediaSection mediaSection:
-        slivers.add(
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.8,
-              child: CarouselView(
-                // itemExtent: MediaQuery.of(context).size.width * 0.8,
-                children: mediaSection.items.map((e) {
-                  final String start = String.fromCharCodes(
-                    e.take(100),
-                  ).toLowerCase();
-                  if (start.contains('<svg') || start.contains('<?xml')) {
-                    return SvgPicture.memory(e, fit: BoxFit.cover);
-                  }
-                  return Image.memory(e, fit: BoxFit.cover);
-                }).toList(),
+      },
+    TableSection tableSection => SliverToBoxAdapter(
+        child: tableSection.items.isEmpty
+            ? const SizedBox.shrink()
+            : Table(
+                rows: tableSection.items
+                    .map(
+                      (r) => TableRow(
+                        cells: r.values
+                            .map<TableCell>(
+                              (c) => TableCell(
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: buildMiniMarkDown(
+                                    c.toString(),
+                                    context,
+                                    page,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    )
+                    .toList(),
               ),
-            ),
+      ),
+    CommentThreadSection commentThread => SliverList.builder(
+        itemCount: commentThread.data.length,
+        itemBuilder: (c, i) {
+          return CommentTree(
+            comment: commentThread.data[i],
+            color: Theme.of(context).colorScheme.border,
+            activeColor: Colors.gray.withBlue(200),
+            buildHeader: buildHeader,
+            buildBody: (data) => buildBody(data, context, page),
+            buildEnd: buildEnd,
+          );
+        },
+      ),
+    MarkdownSection markdown => buildMarkdown(markdown.data, context, page),
+    SettingsSliverSection _ => const SliverToBoxAdapter(
+        child: SizedBox(
+          height: 1000,
+          child: Column(children: [Text("Settings")]),
+        ),
+      ),
+    ImageGridSection imageGridSection => buildImageGrid(context, imageGridSection),
+    FormSection formSection => SliverToBoxAdapter(
+        child: FormSectionWidget(formSection: formSection, page: page),
+      ),
+    MediaSection mediaSection => SliverToBoxAdapter(
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.8,
+          child: CarouselView(
+            children: mediaSection.items.map((e) {
+              final String start = String.fromCharCodes(
+                e.take(100),
+              ).toLowerCase();
+              if (start.contains('<svg') || start.contains('<?xml')) {
+                return SvgPicture.memory(e, fit: BoxFit.cover);
+              }
+              return Image.memory(e, fit: BoxFit.cover);
+            }).toList(),
           ),
-        );
-    }
-  }
-
-  return slivers;
+        ),
+      ),
+  };
 }
 
 Widget buildImageGrid(BuildContext context, ImageGridSection imageGridSection) {
