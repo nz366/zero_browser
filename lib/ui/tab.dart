@@ -15,12 +15,18 @@ class TabPaneWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Color? TabBG = Theme.of(context).colorScheme.background.withLuminance(
+      Theme.of(context).brightness == Brightness.light ? .95 : .12,
+    );
+
     // Access the provider state
     final provider = context.watch<TabProvider>();
     final tabs = provider.tabs;
     final focused = provider.focused;
     final focusedTab = provider.focusedTab;
+
     return TabPane<TabData>(
+      tabHandleColor: TabBG,
       items: tabs,
       focused: focused,
       onFocused: (value) => provider.setFocused(value),
@@ -69,100 +75,103 @@ class TabPaneWidget extends StatelessWidget {
       // Content Area
       child: Column(
         children: [
-          Row(
-            children: [
-              IconButton.ghost(
-                icon: Icon(Icons.arrow_back),
-                onPressed: provider.focusedTab.backHistory.isNotEmpty
-                    ? () => provider.goBack()
-                    : null,
-              ),
-              IconButton.ghost(
-                icon: Icon(Icons.arrow_forward),
-                onPressed: provider.focusedTab.forwardHistory.isNotEmpty
-                    ? () => provider.goForward()
-                    : null,
-              ),
-              IconButton.ghost(
-                icon: provider.focusedTab.page.loading
-                    ? Icon(Icons.close)
-                    : Icon(Icons.refresh),
-                onPressed: () {
-                  if (provider.focusedTab.page.loading) {
-                    provider.cancelLoad();
-                  } else {
-                    provider.loadTab();
-                  }
-                },
-              ),
+          Container(
+            decoration: BoxDecoration(color: TabBG),
+            child: Row(
+              children: [
+                IconButton.ghost(
+                  icon: Icon(Icons.arrow_back),
+                  onPressed: provider.focusedTab.backHistory.isNotEmpty
+                      ? () => provider.goBack()
+                      : null,
+                ),
+                IconButton.ghost(
+                  icon: Icon(Icons.arrow_forward),
+                  onPressed: provider.focusedTab.forwardHistory.isNotEmpty
+                      ? () => provider.goForward()
+                      : null,
+                ),
+                IconButton.ghost(
+                  icon: provider.focusedTab.page.loading
+                      ? Icon(Icons.close)
+                      : Icon(Icons.refresh),
+                  onPressed: () {
+                    if (provider.focusedTab.page.loading) {
+                      provider.cancelLoad();
+                    } else {
+                      provider.loadTab();
+                    }
+                  },
+                ),
 
-              Spacer(),
-              Consumer<BookmarkProvider>(
-                builder: (context, bookmarkProvider, _) {
-                  final isBookmarked = bookmarkProvider.isBookmarked(
-                    focusedTab.page.url,
-                  );
-                  return IconButton.ghost(
-                    icon: Icon(
-                      isBookmarked ? Icons.bookmark : Icons.bookmark_outline,
-                    ),
-                    onPressed: () {
-                      bookmarkProvider.toggleBookmark(
-                        focusedTab.page.url,
-                        title: focusedTab.page.title,
-                      );
-                    },
-                  );
-                },
-              ),
+                Spacer(),
+                Consumer<BookmarkProvider>(
+                  builder: (context, bookmarkProvider, _) {
+                    final isBookmarked = bookmarkProvider.isBookmarked(
+                      focusedTab.page.url,
+                    );
+                    return IconButton.ghost(
+                      icon: Icon(
+                        isBookmarked ? Icons.bookmark : Icons.bookmark_outline,
+                      ),
+                      onPressed: () {
+                        bookmarkProvider.toggleBookmark(
+                          focusedTab.page.url,
+                          title: focusedTab.page.title,
+                        );
+                      },
+                    );
+                  },
+                ),
 
-              // IconButton.ghost(icon: Icon(Icons.share), onPressed: () {}),
-              Expanded(
-                flex: 3,
-                child: Padding(
-                  padding: .symmetric(horizontal: 10, vertical: 4),
-                  child: TextField(
-                    onChanged: (e) {
-                      focusedTab.page.url = e;
-                    },
-                    placeholder: Text('Type to search or url'),
-                    onSubmitted: (e) => provider.navigateWithHistory(e),
-                    controller: TextEditingController(
-                      text: focusedTab.page.url,
-                    ),
-
-                    features: [
-                      InputFeature.leading(
-                        GestureDetector(
-                          child: Icon(LucideIcons.settings2),
-                          onTap: () {
-                            showBrowserTabSettings(context);
-                          },
-                        ),
+                // IconButton.ghost(icon: Icon(Icons.share), onPressed: () {}),
+                Expanded(
+                  flex: 3,
+                  child: Padding(
+                    padding: .symmetric(horizontal: 10, vertical: 4),
+                    child: TextField(
+                      onChanged: (e) {
+                        focusedTab.page.url = e;
+                      },
+                      placeholder: Text('Type to search or url'),
+                      onSubmitted: (e) => provider.navigateWithHistory(e),
+                      controller: TextEditingController(
+                        text: focusedTab.page.url,
                       ),
 
-                      // InputFeature.trailing(
-                      //   IconButton.ghost(
-                      //     icon: Icon(Icons.visibility),
-                      //     onPressed: () {
-                      //       provider.toggleViewMode();
-                      //     },
-                      //   ),
-                      // ),
-                    ],
+                      features: [
+                        InputFeature.leading(
+                          GestureDetector(
+                            child: Icon(LucideIcons.settings2),
+                            onTap: () {
+                              showBrowserTabSettings(context);
+                            },
+                          ),
+                        ),
+
+                        // InputFeature.trailing(
+                        //   IconButton.ghost(
+                        //     icon: Icon(Icons.visibility),
+                        //     onPressed: () {
+                        //       provider.toggleViewMode();
+                        //     },
+                        //   ),
+                        // ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              Spacer(),
+                Spacer(),
 
-              IconButton.ghost(
-                icon: Icon(LucideIcons.menu),
-                onPressed: () {
-                  showBrowserTabSettings(context);
-                },
-              ),
-            ],
+                IconButton.ghost(
+                  icon: Icon(LucideIcons.menu),
+                  onPressed: () {
+                    showBrowserTabSettings(context);
+                  },
+                ),
+              ],
+            ),
           ),
 
           Divider(),

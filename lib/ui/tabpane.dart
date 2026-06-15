@@ -267,6 +267,8 @@ class TabPane<T> extends StatefulWidget {
   /// at the end of the tab bar.
   final VoidCallback? onAdd;
 
+  final Color? tabHandleColor;
+
   /// Creates a [TabPane] with sortable tabs and integrated content display.
   ///
   /// Configures a comprehensive tab interface that combines sortable tab management
@@ -323,6 +325,7 @@ class TabPane<T> extends StatefulWidget {
     required this.child,
     this.barHeight,
     this.onAdd,
+    this.tabHandleColor,
   });
 
   @override
@@ -376,7 +379,7 @@ class TabPaneState<T> extends State<TabPane<T>> {
           child: CustomPaint(
             painter: _TabItemPainter(
               borderRadius: borderRadius,
-              backgroundColor: backgroundColor,
+              backgroundColor: widget.tabHandleColor ?? backgroundColor,
               isFocused: isFocused, // || tabGhost != null,
               borderColor: borderColor,
               borderWidth: borderWidth,
@@ -439,7 +442,7 @@ class TabPaneState<T> extends State<TabPane<T>> {
             ),
           ),
           Container(
-            color: Theme.of(context).colorScheme.accent.withValues(alpha: .96),
+            // color: Theme.of(context).colorScheme.accent.withValues(alpha: .96),
             height: barHeight,
             padding: EdgeInsets.only(
               top: 4,
