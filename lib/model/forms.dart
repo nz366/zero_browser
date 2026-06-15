@@ -23,7 +23,12 @@ sealed class Field<T> {
         name: name,
         label: label,
       )..value = data as bool?,
-      _ => throw Exception('Unknown field type: $type'),
+      'dropdown' => DropdownField(
+        name: name,
+        label: label,
+        options: json['options'] as List<String>,
+      )..value = data as String?,
+      String() => throw UnimplementedError(),
     };
   }
 
@@ -60,6 +65,24 @@ class CheckboxField extends Field<bool> {
     'type': 'checkbox',
     'label': label,
     'data': value,
+  };
+
+  @override
+  bool checkConstraints() => true;
+}
+
+class DropdownField extends Field<String> {
+  final List<String> options;
+
+  DropdownField({required super.name, super.label, required this.options});
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'type': 'dropdown',
+    'label': label,
+    'data': value,
+    'options': options,
   };
 
   @override

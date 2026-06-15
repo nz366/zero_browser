@@ -21,11 +21,6 @@ class BrowserRequest extends RequestTransformer {
 
 ''';
 
-  static const String _settingsMarkdown = '''
-# Settings
-
-''';
-
   BrowserRequest({Uri? uri})
     : super(uri: uri ?? Uri.parse("browser:newtab"), host: ["*"]);
 
@@ -49,8 +44,25 @@ class BrowserRequest extends RequestTransformer {
       case 'demo':
         return DataResponse(body: demopage, statusCode: 200, title: "Settings");
       case "settings":
+        if (uri.hasQuery) {
+          // TODO: Form Submission System
+        }
         return DataResponse(
-          body: [MarkdownSection(_settingsMarkdown)],
+          body: [
+            MarkdownSection("Settings....  (WIP)"),
+            FormSection(
+              fields: {
+                "Theme": DropdownField(
+                  name: "theme",
+                  options: ["Dark", "Light", "System"],
+                ),
+                "Language": DropdownField(
+                  name: "language",
+                  options: ["English"],
+                ),
+              },
+            ),
+          ],
           statusCode: 200,
           title: "Settings",
         );

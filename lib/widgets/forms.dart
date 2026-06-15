@@ -51,6 +51,7 @@ class _FormSectionState extends State<FormSectionWidget> {
       child: Form(
         onSubmit: onSubmit,
         child: Column(
+          spacing: 16,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           // crossAxisAlignment: CrossAxisAlignment.end,
@@ -114,6 +115,43 @@ class _FormSectionState extends State<FormSectionWidget> {
                 field.value = value == CheckboxState.checked;
               },
             ),
+          ),
+        );
+
+      case forms.DropdownField f:
+        return FormField(
+          key: key,
+          label: Text(f.label ?? f.name.capitalize()),
+          validator: null,
+          showErrors: const {
+            FormValidationMode.changed,
+            FormValidationMode.submitted,
+          },
+          child: OutlineButton(
+            onPressed: () {
+              // Show the dropdown relative to the button.
+              showDropdown<String>(
+                context: context,
+                builder: (context) {
+                  return DropdownMenu(
+                    children: f.options
+                        .map(
+                          (value) => MenuButton(
+                            child: Text(value),
+                            onPressed: (context) {
+                              f.value = value;
+                              setState(() {});
+                            },
+                          ),
+                        )
+                        .toList(),
+                  );
+                },
+              ).future.then((value) {
+                f.value = value;
+              });
+            },
+            child: Text(f.value ?? 'Select'),
           ),
         );
 
