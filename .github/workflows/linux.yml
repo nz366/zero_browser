@@ -16,9 +16,6 @@ on:
         required: true
         default: "v0.0.1"
 
-permissions:
-  contents: write   # needed to create GitHub Releases
-
 # ---------------------------------------------------------------------------
 # Shared environment
 # ---------------------------------------------------------------------------
