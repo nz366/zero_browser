@@ -5,7 +5,7 @@ import 'package:zero_browser/providers/history_provider.dart';
 
 class FormSectionWidget extends StatefulWidget {
   final forms.FormSection formSection;
-  final forms.PageData page;
+  final forms.BrowserPage page;
 
   const FormSectionWidget({
     super.key,
@@ -75,21 +75,28 @@ class _FormSectionState extends State<FormSectionWidget> {
   }
 
   FormField _buildFormField(forms.Field field) {
-    final key = _fieldKeys[field.name]!;
+    final key = _fieldKeys[field.name];
+    if (key == null) {
+      return FormField(
+        key: FormKey("unknown"),
+        label: Text(field.label ?? field.name.capitalize()),
+        child: OutlineButton(child: Text("${field.value}")),
+      );
+    }
 
     switch (field) {
+      case forms.UnknownField f:
+        return FormField(
+          key: key,
+          label: Text(f.label ?? f.name.capitalize()),
+          child: OutlineButton(child: Text("${f.value}")),
+        );
       case forms.TextField f:
         return FormField<String>(
           key: key as FormKey<String>,
           label: Text(f.label ?? f.name.capitalize()),
           hint: f.hint != null ? Text(f.hint!) : null,
-          validator: const LengthValidator(
-            min: 1,
-          ), // You can make this dynamic too
-          showErrors: const {
-            FormValidationMode.changed,
-            FormValidationMode.submitted,
-          },
+          validator: f.validator,
           child: TextField(
             onChanged: (value) {
               f.value = value;
@@ -101,11 +108,7 @@ class _FormSectionState extends State<FormSectionWidget> {
         return FormField<bool>(
           key: key as FormKey<bool>,
           label: Text(f.label ?? f.name.capitalize()),
-          validator: null,
-          showErrors: const {
-            FormValidationMode.changed,
-            FormValidationMode.submitted,
-          },
+          validator: f.validator,
           child: Align(
             alignment: AlignmentDirectional.centerEnd,
             child: Checkbox(
@@ -123,10 +126,6 @@ class _FormSectionState extends State<FormSectionWidget> {
           key: key,
           label: Text(f.label ?? f.name.capitalize()),
           validator: null,
-          showErrors: const {
-            FormValidationMode.changed,
-            FormValidationMode.submitted,
-          },
           child: OutlineButton(
             onPressed: () {
               // Show the dropdown relative to the button.
@@ -161,6 +160,25 @@ class _FormSectionState extends State<FormSectionWidget> {
       // case forms.RadioField f:
       // case forms.FileField f:
       // case forms.ImageField f:
+      case forms.FileField f:
+        return FormField(
+          key: key,
+          label: Text(f.label ?? f.name.capitalize()),
+          validator: null,
+          showErrors: const {
+            FormValidationMode.changed,
+            FormValidationMode.submitted,
+          },
+          child: OutlineButton(
+            onPressed: () {
+              // // Show the file upload dialog.
+              // showFilePicker().then((value) {
+              //   f.value = value;
+              // });
+            },
+            child: Text(f.value ?? 'Select File'),
+          ),
+        );
     }
   }
 }
