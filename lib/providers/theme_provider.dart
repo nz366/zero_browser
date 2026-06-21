@@ -37,8 +37,14 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   // Fallback styling for shadcn_flutter schemes
-  ThemeData get lightTheme => ThemeData(colorScheme: ColorSchemes.lightSlate);
-  ThemeData get darkTheme => ThemeData(colorScheme: ColorSchemes.darkSlate);
+  ThemeData get lightTheme => ThemeData(
+    colorScheme: ColorSchemes.lightSlate,
+    density: Density.compactDensity,
+  );
+  ThemeData get darkTheme => ThemeData(
+    colorScheme: ColorSchemes.darkSlate,
+    density: Density.compactDensity,
+  );
 
   ThemeProvider() {
     _loadTheme();
@@ -72,7 +78,7 @@ class ThemeProvider extends ChangeNotifier {
         );
   }
 
-  void toggle() {
+  void toggleBrightNess() {
     if (currentSetting == ThemeSetting.dark) {
       updateTheme(ThemeSetting.light);
     } else {

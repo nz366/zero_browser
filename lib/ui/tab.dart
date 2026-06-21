@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:zero_browser/ui/menu.dart';
+import 'package:zero_browser/ui/sitemenu.dart';
 import 'package:zero_browser/ui/tabpane.dart';
 import 'package:zero_browser/widgets/code.dart';
 import 'package:zero_browser/widgets/content.dart';
@@ -141,10 +142,10 @@ class TabPaneWidget extends StatelessWidget {
 
                       features: [
                         InputFeature.leading(
-                          GestureDetector(
-                            child: Icon(LucideIcons.settings2),
-                            onTap: () {
-                              showBrowserTabSettings(context);
+                          IconButton.ghost(
+                            icon: Icon(LucideIcons.settings2),
+                            onPressed: () {
+                              showSiteMenu(context);
                             },
                           ),
                         ),
@@ -313,6 +314,17 @@ class TabPaneWidget extends StatelessWidget {
           return Icon(LucideIcons.globe, size: 16);
         },
       ),
+    );
+  }
+
+  void showSiteMenu(BuildContext context) {
+    showPopover(
+      context: context,
+      alignment: Alignment.topLeft,
+      // position: const Offset(8, 45),
+      builder: (context) {
+        return const SiteSettingsPopover();
+      },
     );
   }
 }

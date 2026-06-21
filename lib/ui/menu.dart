@@ -61,7 +61,7 @@ void showBrowserTabSettings(BuildContext context) {
                                   : LucideIcons.moon,
                             ),
                             size: ButtonSize.small,
-                            onPressed: () => themeProvider.toggle(),
+                            onPressed: () => themeProvider.toggleBrightNess(),
                           );
                         },
                       ),
