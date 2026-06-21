@@ -1,7 +1,8 @@
 import 'dart:convert';
+import 'package:flutter/material.dart' show Tooltip;
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:provider/provider.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' hide Tooltip;
 import 'package:zero_browser/model/data.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -73,10 +74,12 @@ Widget sectionToWidget(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ThumbnailWidget(url: article.thumbnail ?? article.url),
+                  ThumbnailWidget(
+                    url: article.thumbnail ?? article.url,
+                    baseUri: page.sourceUri,
+                  ),
                   Tooltip(
-                    tooltip: (c) =>
-                        TooltipContainer(child: Text(article.title)),
+                    message: article.title,
                     child: Text(
                       article.title,
                       style: Theme.of(context).typography.medium,
@@ -134,12 +137,15 @@ Widget sectionToWidget(
                       cells: r.values
                           .map<TableCell>(
                             (c) => TableCell(
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: buildMiniMarkDown(
-                                  c.toString(),
-                                  context,
-                                  page,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: buildMiniMarkDown(
+                                    c.toString(),
+                                    context,
+                                    page,
+                                  ),
                                 ),
                               ),
                             ),
@@ -172,6 +178,7 @@ Widget sectionToWidget(
     ImageGridSection imageGridSection => buildImageGrid(
       context,
       imageGridSection,
+      page,
     ),
     FormSection formSection => wrapsliver(
       FormSectionWidget(formSection: formSection, page: page),
@@ -197,11 +204,18 @@ Widget sectionToWidget(
   };
 }
 
-Widget buildImageGrid(BuildContext context, ImageGridSection imageGridSection) {
+Widget buildImageGrid(
+  BuildContext context,
+  ImageGridSection imageGridSection,
+  BrowserPage page,
+) {
   return SliverGrid.builder(
     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5),
     itemBuilder: (c, i) {
-      return ThumbnailWidget(url: imageGridSection.data[i]);
+      return ThumbnailWidget(
+        url: imageGridSection.data[i],
+        baseUri: page.sourceUri,
+      );
     },
   );
 }
@@ -228,7 +242,7 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
       errorBuilder: (c, e, s) {
         if (e is ArgumentError) {
           if (url.startsWith("//")) {
-            return ThumbnailWidget(url: "https:$url");
+            return ThumbnailWidget(url: "https:$url", baseUri: widget.baseUri);
           }
 
           if (url.contains('data:')) {
@@ -269,17 +283,12 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
         }
 
         return Tooltip(
-          tooltip: (c) =>
-              TooltipContainer(child: Text("${e.toString()}\n${s.toString()}")),
+          message: "${widget.url}\n${e.toString()}\n",
           child: Icon(LucideIcons.imageOff),
         );
       },
     );
   }
-}
-
-extension on Uri {
-  bool get isWithoutHostScheme => host == "" && scheme == "";
 }
 
 Widget buildMarkdown(element, BuildContext context, BrowserPage page) {
@@ -299,7 +308,7 @@ MarkdownConfig markdownBrowserConfig(BuildContext context, BrowserPage page) {
     configs: [
       ImgConfig(
         builder: (imageUrl, _) {
-          return ThumbnailWidget(url: imageUrl);
+          return ThumbnailWidget(url: imageUrl, baseUri: page.sourceUri);
         },
       ),
       LinkConfig(
