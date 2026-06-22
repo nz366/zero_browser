@@ -142,11 +142,14 @@ class TabPaneWidget extends StatelessWidget {
 
                       features: [
                         InputFeature.leading(
-                          IconButton.ghost(
-                            icon: Icon(LucideIcons.settings2),
-                            onPressed: () {
-                              showSiteMenu(context);
-                            },
+                          OverlayAnchor(
+                            anchor: sitemenuSymbol,
+                            child: IconButton.ghost(
+                              icon: Icon(LucideIcons.settings2),
+                              onPressed: () {
+                                showSiteMenu(context);
+                              },
+                            ),
                           ),
                         ),
 
@@ -165,11 +168,14 @@ class TabPaneWidget extends StatelessWidget {
 
                 Spacer(),
 
-                IconButton.ghost(
-                  icon: Icon(LucideIcons.menu),
-                  onPressed: () {
-                    showBrowserTabSettings(context);
-                  },
+                OverlayAnchor(
+                  anchor: browserMenuLayerLink,
+                  child: IconButton.ghost(
+                    icon: Icon(LucideIcons.menu),
+                    onPressed: () {
+                      showBrowserTabSettings(context);
+                    },
+                  ),
                 ),
               ],
             ),
@@ -314,17 +320,6 @@ class TabPaneWidget extends StatelessWidget {
           return Icon(LucideIcons.globe, size: 16);
         },
       ),
-    );
-  }
-
-  void showSiteMenu(BuildContext context) {
-    showPopover(
-      context: context,
-      alignment: Alignment.topLeft,
-      // position: const Offset(8, 45),
-      builder: (context) {
-        return const SiteSettingsPopover();
-      },
     );
   }
 }
