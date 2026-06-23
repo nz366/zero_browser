@@ -265,14 +265,12 @@ enum LayoutConfig { table, list, grid, masonry }
 class BrowserPage {
   String url;
   String title;
-  bool loading;
   Uri? sourceUri;
   List<Section> content;
 
   BrowserPage({
     required this.url,
     required this.title,
-    this.loading = false,
     required this.content,
     this.sourceUri,
   });
@@ -281,7 +279,6 @@ class BrowserPage {
     return BrowserPage(
       url: json['url'] ?? '',
       title: json['title'] ?? '',
-      loading: json['loading'] ?? false,
       content: (json['content'] as List? ?? [])
           .map((e) => Section.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -292,7 +289,6 @@ class BrowserPage {
     return {
       'url': url,
       'title': title,
-      'loading': loading,
       'content': content.map((e) => e.toJson()).toList(),
     };
   }

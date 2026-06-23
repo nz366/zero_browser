@@ -93,11 +93,11 @@ class TabPaneWidget extends StatelessWidget {
                       : null,
                 ),
                 IconButton.ghost(
-                  icon: provider.focusedTab.page.loading
+                  icon: provider.focusedTab.loading
                       ? Icon(Icons.close)
                       : Icon(Icons.refresh),
                   onPressed: () {
-                    if (provider.focusedTab.page.loading) {
+                    if (provider.focusedTab.loading) {
                       provider.cancelLoad();
                     } else {
                       provider.loadTab();
@@ -316,7 +316,7 @@ class TabPaneWidget extends StatelessWidget {
       height: 20,
       child: Builder(
         builder: (c) {
-          if (data.page.loading) return CircularProgressIndicator();
+          if (data.loading) return CircularProgressIndicator();
           return Icon(LucideIcons.globe, size: 16);
         },
       ),

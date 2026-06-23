@@ -38,6 +38,7 @@ class LinkedHistory {
 
 class TabData {
   late final String id;
+  bool loading = false;
   BrowserPage page;
 
   List<String> backHistory = [];
@@ -62,6 +63,12 @@ class TabData {
       backHistory.add(currentHistoryUrl!);
       forwardHistory.clear();
     }
+  }
+
+  void setContent(DataResponse? response) {
+    page.content = response?.body ?? [MarkdownSection("## No Response")];
+    page.title = response?.title ?? "No Response";
+    page.sourceUri = response?.sourceUri;
   }
 }
 
@@ -130,7 +137,7 @@ class TabProvider extends ChangeNotifier {
   }
 
   void cancelLoading() {
-    _tabs[focused].data.page.loading = false;
+    _tabs[focused].data.loading = false;
     notifyListeners();
   }
 
@@ -158,18 +165,15 @@ class TabProvider extends ChangeNotifier {
 
     try {
       final data = fetchData(targetTab, url);
-      targetTab.page.loading = true;
+      targetTab.loading = true;
       notifyListeners();
 
       // We run the future through the token to exit out of the await
       // immediately when CancelledException is thrown durlng cancel()
       final response = await token.run<DataResponse?>(data);
 
-      if (response == null) return;
-
-      targetTab.page.content = response.body;
-      targetTab.page.title = response.title;
-      targetTab.page.loading = false;
+      targetTab.setContent(response);
+      targetTab.loading = false;
 
       notifyListeners();
     } on CancelledException catch (_) {
@@ -178,16 +182,16 @@ class TabProvider extends ChangeNotifier {
       if (targetTab.loadToken != token) return; // Ignore if overwritten
 
       targetTab.page.content = [MarkdownSection(e.toString())];
-      targetTab.page.loading = false;
+      targetTab.loading = false;
       notifyListeners();
     }
   }
 
   void cancelLoad() {
     final targetTab = _tabs[focused].data;
-    if (targetTab.page.loading) {
+    if (targetTab.loading) {
       targetTab.loadToken?.cancel();
-      targetTab.page.loading = false;
+      targetTab.loading = false;
       notifyListeners();
     }
   }
