@@ -10,15 +10,34 @@ import 'package:zero_browser/utils/uri.dart';
 import 'package:zero_browser/widgets/comment_threads/comment_tree.dart';
 import 'package:zero_browser/widgets/forms.dart';
 
-class ContentView extends StatelessWidget {
+class ContentView extends StatefulWidget {
   final BrowserPage page;
   const ContentView({super.key, required this.page});
 
   @override
+  State<ContentView> createState() => _ContentViewState();
+}
+
+class _ContentViewState extends State<ContentView> {
+  final ScrollController _scrollController = ScrollController();
+  bool? hovering = false;
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 8.0),
-      child: CustomScrollView(slivers: generateSlivers(context, page)),
+      child: MouseRegion(
+        onHover: (_) => hovering = true,
+        onExit: (_) => hovering = null,
+        child: Scrollbar(
+          controller: _scrollController,
+          thumbVisibility: hovering,
+          trackVisibility: hovering,
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: generateSlivers(context, widget.page),
+          ),
+        ),
+      ),
     );
   }
 }

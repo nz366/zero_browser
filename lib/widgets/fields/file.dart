@@ -97,7 +97,6 @@ class _FileFieldWidgetState extends State<FileFieldWidget> {
                 color: isHighlighted
                     ? theme.colorScheme.primary
                     : theme.colorScheme.border,
-                width: isHighlighted ? 2 : 1,
               ),
             ),
             child: Column(
