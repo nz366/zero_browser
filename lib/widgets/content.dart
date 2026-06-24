@@ -23,15 +23,16 @@ class _ContentViewState extends State<ContentView> {
   bool? hovering = false;
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 8.0),
-      child: MouseRegion(
-        onHover: (_) => hovering = true,
-        onExit: (_) => hovering = null,
-        child: Scrollbar(
-          controller: _scrollController,
-          thumbVisibility: hovering,
-          trackVisibility: hovering,
+    return MouseRegion(
+      onHover: (_) => hovering = true,
+      onExit: (_) => hovering = null,
+      child: Scrollbar(
+        controller: _scrollController,
+        thumbVisibility: hovering,
+        trackVisibility: hovering,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 8.0),
+
           child: CustomScrollView(
             controller: _scrollController,
             slivers: generateSlivers(context, widget.page),
