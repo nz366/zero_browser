@@ -2,7 +2,6 @@ import 'package:provider/provider.dart';
 import 'package:syntax_highlight/syntax_highlight.dart';
 import 'package:zero_browser/client/client.dart';
 import 'package:zero_browser/client/hosts/bluebird.dart';
-import 'package:zero_browser/client/hosts/chrome.dart';
 import 'package:zero_browser/client/hosts/github.dart';
 import 'package:zero_browser/client/hosts/galleries.dart';
 import 'package:zero_browser/client/hosts/hackernews.dart';
@@ -19,7 +18,6 @@ import 'package:zero_browser/providers/bookmark_provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  startChromeExtensionRequestHost();
   RequesterRegistry.register(HackernewsRequest());
   RequesterRegistry.register(MarkdownRequest());
   RequesterRegistry.register(RedlibRequest());

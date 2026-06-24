@@ -140,7 +140,8 @@ class RequesterRegistry {
       case "file":
         return Localfile(uri: uri);
       case "chrome":
-        return ChromeExtensionRequest(uri: uri);
+        final realUri = uri.toString().replaceFirst("chrome:", "");
+        return ChromiumCDP(uri: Uri.parse(realUri));
       case "":
         uri = Uri.parse("https:$uri");
       case "http":
