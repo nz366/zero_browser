@@ -1,7 +1,6 @@
-import 'package:html/parser.dart' as html_parser;
-import 'package:html2md/html2md.dart' as html2md;
 import 'package:http/http.dart' as http;
 import 'package:zero_browser/client/client.dart';
+import 'package:zero_browser/client/hosts/basichtml.dart';
 import 'package:zero_browser/model/data.dart';
 
 class Mediawiki extends RequestTransformer {
@@ -20,31 +19,15 @@ class Mediawiki extends RequestTransformer {
 
     final body = resp.body;
 
-    // Use the html package to resolve relative URLs in the DOM before converting to Markdown
-    final dom = html_parser.parse(body);
-    final hostpageuri = uri;
-
-    for (var element in dom.querySelectorAll('a, img')) {
-      final attr = element.localName == 'a' ? 'href' : 'src';
-      final value = element.attributes[attr];
-      if (value != null) {
-        final valUri = Uri.parse(value);
-        if (valUri.host.isEmpty) {
-          element.attributes[attr] = hostpageuri.resolve(value).toString();
-        }
-      }
-    }
-
-    final mainContent = dom.body?.querySelector("main")?.innerHtml ?? body;
-    var mdText = html2md.convert(mainContent);
-
-    mdText = mdText.replaceAll(RegExp(r'\.mw-parser-[\s\S]*?\}'), "");
-    mdText = mdText.replaceAll(RegExp(r'@media[^{]*\{[\s\S]*?\}'), "");
-
     return DataResponse(
-      body: [MarkdownSection(mdText)],
+      body: parseHtmlSource(body),
       statusCode: resp.statusCode,
       title: "Wikipedia",
     );
+  }
+
+  List<Section> parseHtmlSource(String body) {
+    final content = cleanHtmlSource(body);
+    return documentToSections(content);
   }
 }

@@ -1,5 +1,6 @@
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
+import 'package:html/parser.dart' as html_parser;
 import 'package:html2md/html2md.dart' as html2md;
 import 'package:http/http.dart' as http;
 import 'package:zero_browser/client/client.dart';
@@ -32,4 +33,18 @@ DataResponse usefulHtmlContent(http.Response response, String? fallbackTitle) {
     statusCode: response.statusCode,
     title: title ?? fallbackTitle ?? "No Title",
   );
+}
+
+Document cleanHtmlSource(String body) {
+  Document dom = html_parser.parse(body);
+  dom.querySelectorAll('style').forEach((element) => element.remove());
+  return dom;
+}
+
+List<Section> documentToSections(Document dom) {
+  final mainContent = (dom.body?.querySelector("#bodyContent")?.innerHtml);
+
+  var mdText = html2md.convert(mainContent!);
+
+  return [MarkdownSection(mdText)];
 }
