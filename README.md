@@ -5,7 +5,7 @@
 
 Bringing simplicity to internet. Welcoming new AI era.
 
-A lightweight and pure and *simple* data-driven data-exchange platform. Eliminating HTML/CSS/JS by implementing common interactive browser elements.
+A lightweight data-driven data-exchange platform. Eliminating HTML/CSS/JS by implementing common interactive browser elements.
 
 <img width="1280" height="720" alt="image" src="https://github.com/user-attachments/assets/46f55ebb-1cf0-44e3-9803-bf5c4a828c8b" />
 
@@ -35,7 +35,7 @@ These are competing, involving and motivating projects that this project won't b
 - Disco.
 - Lightpanda. 
 
-- Everthing becoming chrome browser.
+- Everything becoming chrome browser.
 - Documentation website crashing.
 - Government websites intentionally limiting basic functionality.
 - nodejs.
