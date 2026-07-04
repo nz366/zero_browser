@@ -5,6 +5,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:zero_browser/model/data.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:zero_browser/utils/uri.dart';
 import 'package:zero_browser/widgets/comment_threads/comment_tree.dart';
 import 'package:zero_browser/widgets/forms.dart';
 
@@ -184,9 +185,9 @@ Widget sectionToWidget(
               e.take(100),
             ).toLowerCase();
             if (start.contains('<svg') || start.contains('<?xml')) {
-              return SvgPicture.memory(e, fit: BoxFit.cover);
+              return SvgPicture.memory(e, fit: BoxFit.contain);
             }
-            return Image.memory(e, fit: BoxFit.cover);
+            return Image.memory(e, fit: BoxFit.contain);
           }).toList(),
         ),
       ),
@@ -289,9 +290,7 @@ MarkdownConfig markdownBrowserConfig(BuildContext context, PageData page) {
           Uri uri = Uri.parse(url);
 
           if (uri.host.isEmpty) {
-            uri = Uri.parse(
-              "https://${page.sourceUri?.host}${url.startsWith("/") ? "" : "/"}${uri.path}",
-            );
+            uri = resolveWithPageUri(uri, page.sourceUri);
           }
 
           Provider.of<TabProvider>(
@@ -333,16 +332,17 @@ class _CarouselViewState extends State<CarouselView> {
   final CarouselController controller = CarouselController();
   @override
   Widget build(BuildContext context) {
-    return Carousel(
-      transition: const CarouselTransition.sliding(gap: 24),
-      controller: controller,
-      sizeConstraint: const CarouselFixedConstraint(200),
-      autoplaySpeed: const Duration(seconds: 2),
-      itemCount: 5,
-      itemBuilder: (context, index) {
-        return widget.children[index];
-      },
-      duration: const Duration(seconds: 1),
+    return Padding(
+      padding: EdgeInsetsGeometry.only(top: 30),
+      child: Carousel(
+        draggable: widget.children.length != 1,
+        transition: const CarouselTransition.sliding(gap: 24),
+        controller: controller,
+        itemCount: widget.children.length,
+        itemBuilder: (context, index) {
+          return widget.children[index];
+        },
+      ),
     );
   }
 }

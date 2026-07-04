@@ -12,3 +12,14 @@ String cleanUri(Uri uri) {
 
   return uri.toString();
 }
+
+Uri resolveWithPageUri(Uri child, Uri? parent) {
+  if (parent == null) return child;
+  if (child.host.isEmpty) {
+    return Uri.parse(
+      "${parent.scheme}:${parent.host}${child.path.startsWith("/") ? "" : "/"}${child.path}",
+    );
+  }
+
+  return child;
+}
