@@ -1,9 +1,12 @@
+import 'package:shadcn_flutter/src/components/form/form.dart';
+
 sealed class Field<T> {
   T? value;
   final String name;
   final String? label;
+  Validator<T>? validator;
 
-  Field({required this.name, this.label});
+  Field({required this.name, this.label, this.validator});
 
   bool checkConstraints();
 
@@ -28,11 +31,27 @@ sealed class Field<T> {
         label: label,
         options: json['options'] as List<String>,
       )..value = data as String?,
-      String() => throw UnimplementedError(),
+      'file' => FileField(
+        name: name,
+        label: label,
+        contentType: json['contentType'] as String,
+      )..value = data as String?,
+      String() => UnknownField(type: type, name: name, label: label),
     };
   }
 
   Object? toJson();
+}
+
+class UnknownField extends Field {
+  final String type;
+  UnknownField({required this.type, required super.name, super.label});
+
+  @override
+  bool checkConstraints() => false;
+
+  @override
+  Map<String, dynamic> toJson() => {'name': name, 'type': type, 'data': value};
 }
 
 class TextField extends Field<String> {
@@ -83,6 +102,22 @@ class DropdownField extends Field<String> {
     'label': label,
     'data': value,
     'options': options,
+  };
+
+  @override
+  bool checkConstraints() => true;
+}
+
+class FileField extends Field<String> {
+  String? contentType;
+  FileField({required super.name, super.label, this.contentType = ""});
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'type': 'file',
+    'label': label,
+    'data': value,
   };
 
   @override

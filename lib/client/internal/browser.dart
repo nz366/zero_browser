@@ -27,11 +27,6 @@ class BrowserRequest extends RequestTransformer {
   @override
   RequestTransformer withUri(Uri uri) => BrowserRequest(uri: uri);
 
-  // @override
-  // Future<http.Response> djdsjs() async {
-  //   return http.Response("", 200);
-  // }
-
   @override
   Future<DataResponse> getData() async {
     switch (uri.path) {
@@ -42,7 +37,7 @@ class BrowserRequest extends RequestTransformer {
           title: "New Tab",
         );
       case 'demo':
-        return DataResponse(body: demopage, statusCode: 200, title: "Settings");
+        return DataResponse(body: demopage(), statusCode: 200, title: "Demo");
       case "settings":
         if (uri.hasQuery) {
           // TODO: Form Submission System

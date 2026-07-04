@@ -1,6 +1,6 @@
 import 'package:zero_browser/model/data.dart';
 
-final demopage = [
+List<Section> demopage() => [
   MarkdownSection("""# This is a demo page
 
     Markdown Section
@@ -8,6 +8,15 @@ final demopage = [
 
     """),
 
+  MarkdownSection("## Forms"),
+  FormSection(
+    fields: {
+      "name": TextField(name: "name"),
+      "file": FileField(name: "Upload File"),
+    },
+  ),
+
+  MarkdownSection("## Comments"),
   CommentThreadSection([
     CommentData(
       content: "This is a comment",

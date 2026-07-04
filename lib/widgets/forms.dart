@@ -2,6 +2,7 @@ import 'package:provider/provider.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:zero_browser/model/data.dart' as forms;
 import 'package:zero_browser/providers/history_provider.dart';
+import 'package:zero_browser/widgets/fields/file.dart';
 
 class FormSectionWidget extends StatefulWidget {
   final forms.FormSection formSection;
@@ -18,7 +19,6 @@ class FormSectionWidget extends StatefulWidget {
 }
 
 class _FormSectionState extends State<FormSectionWidget> {
-  // Store keys dynamically
   final Map<String, FormKey> _fieldKeys = {};
 
   @override
@@ -37,8 +37,12 @@ class _FormSectionState extends State<FormSectionWidget> {
           key = FormKey<String>(field.name);
         case forms.CheckboxField _:
           key = FormKey<bool>(field.name);
-        default:
+        case forms.UnknownField _:
           key = FormKey(field.name);
+        case forms.DropdownField _:
+          key = FormKey<String>(field.name);
+        case forms.FileField _:
+          key = FormKey<String>(field.name);
       }
       _fieldKeys[field.name] = key;
     }
@@ -161,23 +165,15 @@ class _FormSectionState extends State<FormSectionWidget> {
       // case forms.FileField f:
       // case forms.ImageField f:
       case forms.FileField f:
-        return FormField(
-          key: key,
+        return FormField<String>(
+          key: key as FormKey<String>,
           label: Text(f.label ?? f.name.capitalize()),
-          validator: null,
+          validator: f.validator,
           showErrors: const {
             FormValidationMode.changed,
             FormValidationMode.submitted,
           },
-          child: OutlineButton(
-            onPressed: () {
-              // // Show the file upload dialog.
-              // showFilePicker().then((value) {
-              //   f.value = value;
-              // });
-            },
-            child: Text(f.value ?? 'Select File'),
-          ),
+          child: FileFieldWidget(field: f),
         );
     }
   }

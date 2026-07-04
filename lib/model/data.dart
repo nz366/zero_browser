@@ -262,14 +262,14 @@ class CenteredSection extends Section {
 
 enum LayoutConfig { table, list, grid, masonry }
 
-class PageData {
+class BrowserPage {
   String url;
   String title;
   bool loading;
   Uri? sourceUri;
   List<Section> content;
 
-  PageData({
+  BrowserPage({
     required this.url,
     required this.title,
     this.loading = false,
@@ -277,8 +277,8 @@ class PageData {
     this.sourceUri,
   });
 
-  factory PageData.fromJson(Map<String, dynamic> json) {
-    return PageData(
+  factory BrowserPage.fromJson(Map<String, dynamic> json) {
+    return BrowserPage(
       url: json['url'] ?? '',
       title: json['title'] ?? '',
       loading: json['loading'] ?? false,

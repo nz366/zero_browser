@@ -120,7 +120,7 @@ void main() {
   });
 
   test('PageData Serialization', () {
-    final page = PageData(
+    final page = BrowserPage(
       url: 'https://test.com',
       title: 'Test Page',
       content: [
@@ -130,7 +130,7 @@ void main() {
     );
 
     final json = page.toJson();
-    final decoded = PageData.fromJson(json);
+    final decoded = BrowserPage.fromJson(json);
 
     expect(decoded.url, page.url);
     expect(decoded.title, page.title);

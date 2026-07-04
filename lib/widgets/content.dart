@@ -10,7 +10,7 @@ import 'package:zero_browser/widgets/comment_threads/comment_tree.dart';
 import 'package:zero_browser/widgets/forms.dart';
 
 class ContentView extends StatelessWidget {
-  final PageData page;
+  final BrowserPage page;
   const ContentView({super.key, required this.page});
 
   @override
@@ -22,7 +22,7 @@ class ContentView extends StatelessWidget {
   }
 }
 
-List<Widget> generateSlivers(BuildContext context, PageData page) {
+List<Widget> generateSlivers(BuildContext context, BrowserPage page) {
   final content = page.content;
   List<Widget> slivers = [];
   for (var element in content) {
@@ -37,7 +37,7 @@ Widget wrapsliver(Widget box, bool useSliverAdapter) {
 
 Widget sectionToWidget(
   BuildContext context,
-  PageData page,
+  BrowserPage page,
   Section element,
   bool useSliverAdapter,
 ) {
@@ -75,7 +75,8 @@ Widget sectionToWidget(
                 children: [
                   ThumbnailWidget(url: article.thumbnail ?? article.url),
                   Tooltip(
-                    tooltip: TooltipContainer(child: Text(article.title)),
+                    tooltip: (c) =>
+                        TooltipContainer(child: Text(article.title)),
                     child: Text(
                       article.title,
                       style: Theme.of(context).typography.medium,
@@ -207,7 +208,8 @@ Widget buildImageGrid(BuildContext context, ImageGridSection imageGridSection) {
 
 class ThumbnailWidget extends StatefulWidget {
   final String? url;
-  const ThumbnailWidget({super.key, required this.url});
+  final Uri? baseUri;
+  const ThumbnailWidget({super.key, required this.url, this.baseUri});
 
   @override
   State<ThumbnailWidget> createState() => _ThumbnailWidgetState();
@@ -254,10 +256,21 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
           );
         }
 
+        // ./path/file.jpg -> scheme + page.sourceUri.host + path/file.jpg
+        final parsed = Uri.parse(url);
+
+        final withbase = resolveWithPageUri(parsed, widget.baseUri);
+
+        if (url != withbase.toString()) {
+          return ThumbnailWidget(
+            url: withbase.toString(),
+            baseUri: widget.baseUri,
+          );
+        }
+
         return Tooltip(
-          tooltip: TooltipContainer(
-            child: Text("${e.toString()}\n${s.toString()}"),
-          ),
+          tooltip: (c) =>
+              TooltipContainer(child: Text("${e.toString()}\n${s.toString()}")),
           child: Icon(LucideIcons.imageOff),
         );
       },
@@ -265,7 +278,11 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
   }
 }
 
-Widget buildMarkdown(element, BuildContext context, PageData page) {
+extension on Uri {
+  bool get isWithoutHostScheme => host == "" && scheme == "";
+}
+
+Widget buildMarkdown(element, BuildContext context, BrowserPage page) {
   return MarkdownWidget(
     sliverMode: true,
     data: element,
@@ -273,7 +290,7 @@ Widget buildMarkdown(element, BuildContext context, PageData page) {
   );
 }
 
-MarkdownConfig markdownBrowserConfig(BuildContext context, PageData page) {
+MarkdownConfig markdownBrowserConfig(BuildContext context, BrowserPage page) {
   final config = Theme.of(context).brightness == Brightness.dark
       ? MarkdownConfig.darkConfig
       : MarkdownConfig.defaultConfig;
@@ -303,14 +320,14 @@ MarkdownConfig markdownBrowserConfig(BuildContext context, PageData page) {
   );
 }
 
-Widget buildMiniMarkDown(String data, BuildContext context, PageData page) {
+Widget buildMiniMarkDown(String data, BuildContext context, BrowserPage page) {
   return MarkdownBlock(
     data: data,
     config: markdownBrowserConfig(context, page),
   );
 }
 
-Widget buildBody(CommentData data, BuildContext context, PageData page) {
+Widget buildBody(CommentData data, BuildContext context, BrowserPage page) {
   return ConstrainedBox(
     constraints: BoxConstraints(maxHeight: 300),
     child: MarkdownBlock(

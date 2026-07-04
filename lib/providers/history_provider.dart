@@ -38,7 +38,7 @@ class LinkedHistory {
 
 class TabData {
   late final String id;
-  PageData page;
+  BrowserPage page;
 
   List<String> backHistory = [];
   List<String> forwardHistory = [];
@@ -196,7 +196,7 @@ class TabProvider extends ChangeNotifier {
     _tabs.add(
       TabPaneData(
         TabData(
-          page: PageData(url: url, title: cleanUriString(url), content: []),
+          page: BrowserPage(url: url, title: cleanUriString(url), content: []),
         ),
       ),
     );
@@ -220,7 +220,7 @@ class TabProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void submitForm(PageData page, FormSection form) {
+  void submitForm(BrowserPage page, FormSection form) {
     final uri = newFormUri(Uri.parse(page.url), form);
     navigateWithHistory(uri.toString());
   }
