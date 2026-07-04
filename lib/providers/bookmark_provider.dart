@@ -18,6 +18,7 @@ class BookmarkProvider extends ChangeNotifier {
     ]);
 
     _bookmarks = await query.get();
+    notifyListeners();
   }
 
   bool isBookmarked(String url) {
