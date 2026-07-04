@@ -228,6 +228,12 @@ class TabProvider extends ChangeNotifier {
     final uri = newFormUri(Uri.parse(page.url), form);
     navigateWithHistory(uri.toString());
   }
+
+  void closeAllTabs() {
+    _tabs.clear();
+    newTab();
+    notifyListeners();
+  }
 }
 
 Uri newFormUri(Uri uri, FormSection form) {

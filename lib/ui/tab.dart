@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:zero_browser/ui/menu.dart';
 import 'package:zero_browser/ui/sitemenu.dart';
+import 'package:zero_browser/ui/tablist.dart';
 import 'package:zero_browser/ui/tabpane.dart';
 import 'package:zero_browser/widgets/code.dart';
 import 'package:zero_browser/widgets/content.dart';
@@ -65,10 +66,15 @@ class TabPaneWidget extends StatelessWidget {
 
       // Global Tab Actions
       leading: [
-        IconButton.secondary(
-          icon: const Icon(Icons.arrow_drop_down),
-          size: ButtonSize.small,
-          onPressed: () {},
+        OverlayAnchor(
+          anchor: browserTabListPopUp,
+          child: IconButton.secondary(
+            icon: const Icon(Icons.arrow_drop_down),
+            size: ButtonSize.small,
+            onPressed: () {
+              showTabListPopUp(context);
+            },
+          ),
         ),
       ],
       trailing: [],
