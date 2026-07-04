@@ -23,10 +23,13 @@ class History extends Table {
 }
 
 class Preferences extends Table {
-  TextColumn get id => text()();
+  TextColumn get id => text().unique()();
   TextColumn get value => text()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column<Object>>? get primaryKey => {id};
 }
 
 @DriftDatabase(tables: [Bookmarks, History, Preferences])
@@ -53,7 +56,7 @@ final appDatabase = AppDatabase();
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'zero_browser_db.sqlite'));
+    final file = File(p.join(dbFolder.path, 'zero_browser_unstable_db.sqlite'));
 
     final cachebase = (await getTemporaryDirectory()).path;
     sqlite3.tempDirectory = cachebase;
