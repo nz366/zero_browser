@@ -159,22 +159,43 @@ class BrowserMenu extends StatelessWidget {
                     IconButton.ghost(
                       icon: const Icon(LucideIcons.minus),
                       size: ButtonSize.small,
-                      onPressed: () {},
+                      onPressed: () {
+                        Provider.of<TabProvider>(
+                          context,
+                          listen: false,
+                        ).zoomOut();
+                      },
                     ),
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text("100%"),
+                      child: Consumer<TabProvider>(
+                        builder: (context, provider, _) {
+                          return Text(
+                            "${(provider.focusedTab.transformationController?.value.getMaxScaleOnAxis() ?? 1 * 100.0).toStringAsFixed(0)}%",
+                          );
+                        },
+                      ),
                     ),
                     IconButton.ghost(
                       icon: const Icon(LucideIcons.plus),
                       size: ButtonSize.small,
-                      onPressed: () {},
+                      onPressed: () {
+                        Provider.of<TabProvider>(
+                          context,
+                          listen: false,
+                        ).zoomIn();
+                      },
                     ),
                     const Gap(8),
                     IconButton.ghost(
                       icon: const Icon(LucideIcons.maximize),
                       size: ButtonSize.small,
-                      onPressed: () {},
+                      onPressed: () {
+                        Provider.of<TabProvider>(
+                          context,
+                          listen: false,
+                        ).resetZoom();
+                      },
                     ),
                   ],
                 ),

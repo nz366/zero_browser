@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart' hide TabPaneData;
+import 'package:shadcn_flutter/shadcn_flutter.dart'
+    hide TabPaneData, TransformationController;
 import 'package:uuid/uuid.dart';
 import 'package:zero_browser/client/client.dart';
 import 'package:zero_browser/model/data.dart';
 import 'package:zero_browser/ui/tabpane.dart';
 import 'package:zero_browser/utils/cancel_token.dart';
 import 'package:zero_browser/utils/uri.dart';
+import 'package:zero_browser/widgets/vendor/interactiveviewer.dart';
 
 final uuid = Uuid();
 
@@ -53,9 +55,12 @@ class TabData {
   bool isWideMode = false;
 
   bool sidebarOpen = false;
+
+  TransformationController? transformationController;
   TabData({required this.page}) {
     id = uuid.v4();
     currentHistoryUrl = page.url;
+    transformationController = TransformationController();
   }
 
   void addHistory(String url) {
@@ -232,6 +237,24 @@ class TabProvider extends ChangeNotifier {
   void closeAllTabs() {
     _tabs.clear();
     newTab();
+    notifyListeners();
+  }
+
+  void zoomOut() {
+    Matrix4 newMatrix = focusedTab.transformationController!.value.scaled(0.8);
+    focusedTab.transformationController?.value = newMatrix;
+    notifyListeners();
+  }
+
+  void resetZoom() {
+    Matrix4 newMatrix = Matrix4.identity();
+    focusedTab.transformationController?.value = newMatrix;
+    notifyListeners();
+  }
+
+  void zoomIn() {
+    Matrix4 newMatrix = focusedTab.transformationController!.value.scaled(1.2);
+    focusedTab.transformationController?.value = newMatrix;
     notifyListeners();
   }
 }

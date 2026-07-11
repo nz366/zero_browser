@@ -8,6 +8,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show clampDouble;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/physics.dart';
+import 'package:flutter/services.dart' show HardwareKeyboard;
 import 'package:flutter/widgets.dart';
 import 'package:vector_math/vector_math_64.dart' show Quad, Vector3;
 
@@ -936,14 +937,19 @@ class _InteractiveViewerState extends State<InteractiveViewer>
     }
   }
 
+  bool get _isCtrlPressed => HardwareKeyboard.instance.isControlPressed;
+
   // Handle mousewheel and web trackpad scroll events.
   void _receivedPointerSignal(PointerSignalEvent event) {
     final Offset local = event.localPosition;
     final Offset global = event.position;
     final double scaleChange;
     if (event is PointerScrollEvent) {
-      if (event.kind == PointerDeviceKind.trackpad &&
-          !widget.trackpadScrollCausesScale) {
+      final bool isTrackpad = event.kind == PointerDeviceKind.trackpad;
+      final bool shouldPan = isTrackpad
+          ? !widget.trackpadScrollCausesScale
+          : !_isCtrlPressed;
+      if (shouldPan) {
         // Trackpad scroll, so treat it as a pan.
         widget.onInteractionStart?.call(
           ScaleStartDetails(focalPoint: global, localFocalPoint: local),
