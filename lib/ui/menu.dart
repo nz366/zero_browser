@@ -4,33 +4,35 @@ import 'package:zero_browser/providers/history_provider.dart';
 import 'package:zero_browser/providers/theme_provider.dart' show ThemeProvider;
 
 final Symbol browserMenuLayerLink = #browserMenuLayerLink;
-
 void showBrowserTabSettings(BuildContext context) {
   showPopover(
     anchor: browserMenuLayerLink,
-    alignment: Alignment.topRight,
-    offset: const Offset(0, 4),
-    builder: (context) {
-      return const BrowserMenu();
-    },
+    alignment: Alignment.topCenter,
+    builder: (context) => const BrowserMenuPopover(),
   );
 }
 
-class BrowserMenu extends StatelessWidget {
-  const BrowserMenu({super.key});
+class BrowserMenuPopover extends StatefulWidget {
+  const BrowserMenuPopover({super.key});
 
+  @override
+  State<BrowserMenuPopover> createState() => _BrowserMenuPopoverState();
+}
+
+class _BrowserMenuPopoverState extends State<BrowserMenuPopover> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<TabProvider>(context, listen: false);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.background,
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.accent,
+            color: Theme.of(context).colorScheme.accent.withOpacity(.2),
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
         border: Border.all(color: Theme.of(context).colorScheme.border),
@@ -38,181 +40,97 @@ class BrowserMenu extends StatelessWidget {
       ),
       child: IntrinsicWidth(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 280, maxWidth: 320),
+          constraints: const BoxConstraints(minWidth: 320, maxWidth: 360),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // // Search/Title
-              // const Padding(
-              //   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              //   child: Text(
-              //     "Menu",
-              //     style: TextStyle(
-              //       fontSize: 18,
-              //       fontWeight: FontWeight.bold,
-              //     ),
-              //   ),
-              // ),
-              // const Divider(),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                child: Row(
-                  children: [
-                    const Gap(8),
-                    Consumer<ThemeProvider>(
-                      builder: (context, themeProvider, _) {
-                        return IconButton.ghost(
-                          icon: Icon(
-                            Theme.of(context).brightness == Brightness.dark
-                                ? LucideIcons.sun
-                                : LucideIcons.moon,
-                          ),
-                          size: ButtonSize.small,
-                          onPressed: () => themeProvider.toggleBrightNess(),
-                        );
-                      },
-                    ),
+              _buildHeader(),
 
-                    const Gap(8),
-                    Consumer<TabProvider>(
-                      builder: (context, provider, _) {
-                        return IconButton.ghost(
-                          icon: Icon(
-                            provider.focusedTab.isWideMode
-                                ? LucideIcons.unfoldHorizontal
-                                : LucideIcons.foldHorizontal,
-                          ),
-                          size: ButtonSize.small,
-                          onPressed: () => provider.toggleWideMode(),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
+              const Divider(height: 24),
 
-              const Divider(),
-              // Quick Actions
-              MenuAction(
+              _buildMenuAction(
+                context,
                 icon: LucideIcons.plus,
                 label: "New Tab",
                 shortcut: "Ctrl+T",
                 onPressed: () {
-                  context.read<TabProvider>().newTab();
+                  provider.newTab();
                   closeOverlay(context);
                 },
               ),
-              // MenuAction(
-              //   icon: LucideIcons.copy,
-              //   label: "New",
-              //   shortcut: "Ctrl+N",
-              //   onPressed: () {},
-              // ),
 
-              // MenuAction(
-              //   icon: LucideIcons.shield,
-              //   label: "New Incognito Window",
-              //   shortcut: "Ctrl+Shift+N",
-              //   onPressed: () {},
-              // ),
-              const Divider(),
+              const Divider(height: 24),
 
-              // Navigation History
-              buildTabOpenButton(
+              _buildTabButton(
                 provider,
                 context,
-                tab: "browser:history",
                 icon: LucideIcons.history,
                 label: "History",
+                tab: "browser:history",
               ),
-              buildTabOpenButton(
+
+              _buildTabButton(
                 provider,
                 context,
-                tab: "browser:pinned",
                 icon: LucideIcons.pin,
                 label: "Pinned",
+                tab: "browser:pinned",
               ),
-              buildTabOpenButton(
+
+              _buildTabButton(
                 provider,
                 context,
-                tab: "browser:bookmarks",
                 icon: LucideIcons.star,
                 label: "Bookmarks",
+                tab: "browser:bookmarks",
               ),
 
-              Divider(),
+              const Divider(height: 24),
 
-              // Zoom Controls
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                child: Row(
-                  children: [
-                    const Text("Zoom"),
-                    const Spacer(),
-                    IconButton.ghost(
-                      icon: const Icon(LucideIcons.minus),
-                      size: ButtonSize.small,
-                      onPressed: () {},
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text("100%"),
-                    ),
-                    IconButton.ghost(
-                      icon: const Icon(LucideIcons.plus),
-                      size: ButtonSize.small,
-                      onPressed: () {},
-                    ),
-                    const Gap(8),
-                    IconButton.ghost(
-                      icon: const Icon(LucideIcons.maximize),
-                      size: ButtonSize.small,
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-              ),
+              _buildZoomRow(),
 
-              const Divider(),
+              const Divider(height: 24),
 
-              MenuAction(
+              _buildMenuAction(
+                context,
                 icon: LucideIcons.search,
                 label: "Find",
                 shortcut: "Ctrl+F",
                 onPressed: () {},
               ),
 
-              const Divider(),
+              const Divider(height: 24),
 
-              // Global Actions
-              buildTabOpenButton(
+              _buildTabButton(
                 provider,
                 context,
-                tab: "browser:settings",
                 icon: LucideIcons.settings,
                 label: "Settings",
+                tab: "browser:settings",
               ),
 
-              MenuAction(
+              _buildMenuAction(
+                context,
                 icon: LucideIcons.code,
                 label: "View Source",
-                onPressed: () => toggleTabSidebar(provider, context),
+                onPressed: () {
+                  provider.toggleTabSidebar();
+                  closeOverlay(context);
+                },
               ),
-              MenuAction(
+
+              _buildMenuAction(
+                context,
                 icon: LucideIcons.circleHelp,
                 label: "Help",
                 onPressed: () {},
               ),
-              MenuAction(
+
+              _buildMenuAction(
+                context,
                 icon: LucideIcons.info,
-                label: "About Zero Browser",
+                label: "About",
                 onPressed: () {},
               ),
             ],
@@ -222,19 +140,86 @@ class BrowserMenu extends StatelessWidget {
     );
   }
 
-  void toggleTabSidebar(TabProvider provider, BuildContext context) {
-    provider.toggleTabSidebar();
-    closeOverlay(context);
+  Widget _buildHeader() {
+    return Row(
+      children: [
+        Consumer<ThemeProvider>(
+          builder: (_, theme, __) {
+            return IconButton.ghost(
+              size: ButtonSize.small,
+              icon: Icon(
+                Theme.of(context).brightness == Brightness.dark
+                    ? LucideIcons.sun
+                    : LucideIcons.moon,
+              ),
+              onPressed: theme.toggleBrightNess,
+            );
+          },
+        ),
+
+        const Gap(8),
+
+        Consumer<TabProvider>(
+          builder: (_, provider, __) {
+            return IconButton.ghost(
+              size: ButtonSize.small,
+              icon: Icon(
+                provider.focusedTab.isWideMode
+                    ? LucideIcons.unfoldHorizontal
+                    : LucideIcons.foldHorizontal,
+              ),
+              onPressed: provider.toggleWideMode,
+            );
+          },
+        ),
+      ],
+    );
   }
 
-  MenuAction buildTabOpenButton(
+  Widget _buildZoomRow() {
+    return Row(
+      children: [
+        Text(
+          "Zoom",
+          style: Theme.of(context).typography.base.copyWith(fontSize: 13),
+        ),
+        const Spacer(),
+        IconButton.ghost(
+          size: ButtonSize.small,
+          icon: const Icon(LucideIcons.minus),
+          onPressed: () {},
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            "100%",
+            style: Theme.of(context).typography.base.copyWith(fontSize: 13),
+          ),
+        ),
+        IconButton.ghost(
+          size: ButtonSize.small,
+          icon: const Icon(LucideIcons.plus),
+          onPressed: () {},
+        ),
+        const Gap(8),
+        IconButton.ghost(
+          size: ButtonSize.small,
+          icon: const Icon(LucideIcons.maximize),
+          onPressed: () {},
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabButton(
     TabProvider provider,
     BuildContext context, {
     required IconData icon,
     required String label,
     required String tab,
   }) {
-    return MenuAction(
+    return _buildMenuAction(
+      context,
       icon: icon,
       label: label,
       onPressed: () {
@@ -243,40 +228,34 @@ class BrowserMenu extends StatelessWidget {
       },
     );
   }
-}
 
-class MenuAction extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String? shortcut;
-  final VoidCallback onPressed;
-
-  const MenuAction({
-    super.key,
-    required this.icon,
-    required this.label,
-    this.shortcut,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildMenuAction(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    String? shortcut,
+    required VoidCallback onPressed,
+  }) {
     return Button.ghost(
       onPressed: onPressed,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         child: Row(
           children: [
             Icon(icon, size: 18),
             const Gap(12),
-            Expanded(child: Text(label)),
+            Expanded(
+              child: Text(
+                label,
+                style: Theme.of(context).typography.base.copyWith(fontSize: 13),
+              ),
+            ),
             if (shortcut != null)
               Text(
-                shortcut!,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).colorScheme.mutedForeground,
-                ),
+                shortcut,
+                style: Theme.of(
+                  context,
+                ).typography.xSmall.copyWith(fontSize: 12),
               ),
           ],
         ),
