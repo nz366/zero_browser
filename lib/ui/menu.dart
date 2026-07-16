@@ -170,9 +170,14 @@ class BrowserMenu extends StatelessWidget {
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Consumer<TabProvider>(
                         builder: (context, provider, _) {
-                          return Text(
-                            "${(provider.focusedTab.transformationController?.value.getMaxScaleOnAxis() ?? 1 * 100.0).toStringAsFixed(0)}%",
-                          );
+                          final zval =
+                              provider
+                                  .focusedTab
+                                  .transformationController
+                                  ?.value
+                                  .getMaxScaleOnAxis() ??
+                              1;
+                          return Text("${(zval * 100.0).toStringAsFixed(0)}%");
                         },
                       ),
                     ),

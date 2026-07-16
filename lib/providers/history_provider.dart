@@ -240,21 +240,42 @@ class TabProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void zoomOut() {
-    Matrix4 newMatrix = focusedTab.transformationController!.value.scaled(0.8);
-    focusedTab.transformationController?.value = newMatrix;
-    notifyListeners();
-  }
-
   void resetZoom() {
     Matrix4 newMatrix = Matrix4.identity();
     focusedTab.transformationController?.value = newMatrix;
     notifyListeners();
   }
 
+  final zoomSteps = [0.5, 0.8, 1.0, 1.2, 1.4, 1.7, 2.0, 4.0];
+  int zoom_index = 2;
+
+  void zoomOut() {
+    if (zoom_index > 0) {
+      zoom_index--;
+    }
+    zoomBy(zoomSteps[zoom_index]);
+  }
+
   void zoomIn() {
-    Matrix4 newMatrix = focusedTab.transformationController!.value.scaled(1.2);
-    focusedTab.transformationController?.value = newMatrix;
+    if (zoom_index < zoomSteps.length - 1) {
+      zoom_index++;
+    }
+    zoomBy(zoomSteps[zoom_index]);
+  }
+
+  void zoomBy(double targetScale) {
+    if (targetScale == 1) {
+      resetZoom();
+      return;
+    }
+
+    final newMatrix = focusedTab.transformationController!.value.clone();
+
+    newMatrix[0] = targetScale;
+    newMatrix[5] = targetScale;
+    newMatrix[10] = targetScale;
+
+    focusedTab.transformationController!.value = newMatrix;
     notifyListeners();
   }
 }
