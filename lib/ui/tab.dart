@@ -11,6 +11,7 @@ import 'package:zero_browser/ui/tabpane.dart';
 import 'package:zero_browser/widgets/code.dart';
 import 'package:zero_browser/widgets/content.dart';
 import 'package:zero_browser/providers/bookmark_provider.dart';
+import 'package:zero_browser/widgets/density.dart';
 
 class TabPaneWidget extends StatelessWidget {
   const TabPaneWidget({super.key});
@@ -134,40 +135,42 @@ class TabPaneWidget extends StatelessWidget {
                 // IconButton.ghost(icon: Icon(Icons.share), onPressed: () {}),
                 Expanded(
                   flex: 3,
-                  child: Padding(
-                    padding: .symmetric(horizontal: 10, vertical: 4),
-                    child: TextField(
-                      onChanged: (e) {
-                        focusedTab.page.url = e;
-                      },
-                      placeholder: Text('Type to search or url'),
-                      onSubmitted: (e) => provider.navigateWithHistory(e),
-                      controller: TextEditingController(
-                        text: focusedTab.page.url,
-                      ),
-
-                      features: [
-                        InputFeature.leading(
-                          OverlayAnchor(
-                            anchor: sitemenuSymbol,
-                            child: IconButton.ghost(
-                              icon: Icon(LucideIcons.settings2),
-                              onPressed: () {
-                                showSiteMenu(context);
-                              },
-                            ),
-                          ),
+                  child: DowngradeDensity(
+                    child: Padding(
+                      padding: .symmetric(horizontal: 10, vertical: 4),
+                      child: TextField(
+                        onChanged: (e) {
+                          focusedTab.page.url = e;
+                        },
+                        placeholder: Text('Type to search or url'),
+                        onSubmitted: (e) => provider.navigateWithHistory(e),
+                        controller: TextEditingController(
+                          text: focusedTab.page.url,
                         ),
 
-                        // InputFeature.trailing(
-                        //   IconButton.ghost(
-                        //     icon: Icon(Icons.visibility),
-                        //     onPressed: () {
-                        //       provider.toggleViewMode();
-                        //     },
-                        //   ),
-                        // ),
-                      ],
+                        features: [
+                          InputFeature.leading(
+                            OverlayAnchor(
+                              anchor: sitemenuSymbol,
+                              child: IconButton.ghost(
+                                icon: Icon(LucideIcons.settings2),
+                                onPressed: () {
+                                  showSiteMenu(context);
+                                },
+                              ),
+                            ),
+                          ),
+
+                          // InputFeature.trailing(
+                          //   IconButton.ghost(
+                          //     icon: Icon(Icons.visibility),
+                          //     onPressed: () {
+                          //       provider.toggleViewMode();
+                          //     },
+                          //   ),
+                          // ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
