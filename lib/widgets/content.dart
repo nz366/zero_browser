@@ -7,8 +7,36 @@ import 'package:zero_browser/model/data.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:zero_browser/utils/uri.dart';
+import 'package:zero_browser/widgets/code.dart';
 import 'package:zero_browser/widgets/comment_threads/comment_tree.dart';
 import 'package:zero_browser/widgets/forms.dart';
+
+class ScrollPage extends StatelessWidget {
+  const ScrollPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<TabProvider>();
+
+    return SingleChildScrollView(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: provider.focusedTab.isWideMode
+              ? const BoxConstraints()
+              : const BoxConstraints(maxWidth: 1000),
+          child: CodeSnippet(
+            code: CodeHighlighter(
+              mode: "json",
+              code: provider.focusedTab.page.content
+                  .map((e) => e.toJson())
+                  .join("\n"),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class ContentView extends StatefulWidget {
   final BrowserPage page;

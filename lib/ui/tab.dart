@@ -287,25 +287,7 @@ class TabPaneWidget extends StatelessWidget {
 
                 Gap(10),
 
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: tabs[focused].data.isWideMode
-                            ? const BoxConstraints()
-                            : const BoxConstraints(maxWidth: 1000),
-                        child: CodeSnippet(
-                          code: CodeHighlighter(
-                            mode: "json",
-                            code: provider.focusedTab.page.content
-                                .map((e) => e.toJson())
-                                .join("\n"),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                Expanded(child: ScrollPage()),
               ],
             );
           },
