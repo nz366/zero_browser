@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart' hide TabPane, TabPaneData;
+import 'package:shadcn_flutter/shadcn_flutter.dart'
+    hide TabPane, TabPaneData, InteractiveViewer;
 import 'package:provider/provider.dart';
 
 import 'package:zero_browser/providers/history_provider.dart';
@@ -12,6 +13,7 @@ import 'package:zero_browser/widgets/code.dart';
 import 'package:zero_browser/widgets/content.dart';
 import 'package:zero_browser/providers/bookmark_provider.dart';
 import 'package:zero_browser/widgets/density.dart';
+import 'package:zero_browser/widgets/vendor/interactiveviewer.dart';
 
 class TabPaneWidget extends StatelessWidget {
   const TabPaneWidget({super.key});
@@ -203,13 +205,15 @@ class TabPaneWidget extends StatelessWidget {
                       direction: Axis.horizontal,
                       children: [
                         Expanded(
-                          child: Center(
-                            child: ConstrainedBox(
-                              constraints: tabs[focused].data.isWideMode
-                                  ? const BoxConstraints()
-                                  : const BoxConstraints(maxWidth: 1000),
-                              child: ContentView(
-                                page: provider.focusedTab.page,
+                          child: BrowserInteractiveViewer(
+                            child: Center(
+                              child: ConstrainedBox(
+                                constraints: tabs[focused].data.isWideMode
+                                    ? const BoxConstraints()
+                                    : const BoxConstraints(maxWidth: 1000),
+                                child: ContentView(
+                                  page: provider.focusedTab.page,
+                                ),
                               ),
                             ),
                           ),
@@ -329,6 +333,22 @@ class TabPaneWidget extends StatelessWidget {
           return Icon(LucideIcons.globe, size: 16);
         },
       ),
+    );
+  }
+}
+
+class BrowserInteractiveViewer extends StatelessWidget {
+  final Widget child;
+
+  const BrowserInteractiveViewer({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<TabProvider>();
+    return InteractiveViewer(
+      minScale: 0.5,
+      transformationController: provider.focusedTab.transformationController,
+      child: child,
     );
   }
 }

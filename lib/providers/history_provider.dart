@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart' hide TabPaneData;
+import 'package:shadcn_flutter/shadcn_flutter.dart'
+    hide TabPaneData, TransformationController;
 import 'package:uuid/uuid.dart';
 import 'package:zero_browser/client/client.dart';
 import 'package:zero_browser/model/data.dart';
 import 'package:zero_browser/ui/tabpane.dart';
 import 'package:zero_browser/utils/cancel_token.dart';
 import 'package:zero_browser/utils/uri.dart';
+import 'package:zero_browser/widgets/vendor/interactiveviewer.dart';
 
 final uuid = Uuid();
 
@@ -53,9 +55,12 @@ class TabData {
   bool isWideMode = false;
 
   bool sidebarOpen = false;
+
+  TransformationController? transformationController;
   TabData({required this.page}) {
     id = uuid.v4();
     currentHistoryUrl = page.url;
+    transformationController = TransformationController();
   }
 
   void addHistory(String url) {
@@ -232,6 +237,45 @@ class TabProvider extends ChangeNotifier {
   void closeAllTabs() {
     _tabs.clear();
     newTab();
+    notifyListeners();
+  }
+
+  void resetZoom() {
+    Matrix4 newMatrix = Matrix4.identity();
+    focusedTab.transformationController?.value = newMatrix;
+    notifyListeners();
+  }
+
+  final zoomSteps = [0.5, 0.8, 1.0, 1.2, 1.4, 1.7, 2.0, 4.0];
+  int zoom_index = 2;
+
+  void zoomOut() {
+    if (zoom_index > 0) {
+      zoom_index--;
+    }
+    zoomBy(zoomSteps[zoom_index]);
+  }
+
+  void zoomIn() {
+    if (zoom_index < zoomSteps.length - 1) {
+      zoom_index++;
+    }
+    zoomBy(zoomSteps[zoom_index]);
+  }
+
+  void zoomBy(double targetScale) {
+    if (targetScale == 1) {
+      resetZoom();
+      return;
+    }
+
+    final newMatrix = focusedTab.transformationController!.value.clone();
+
+    newMatrix[0] = targetScale;
+    newMatrix[5] = targetScale;
+    newMatrix[10] = targetScale;
+
+    focusedTab.transformationController!.value = newMatrix;
     notifyListeners();
   }
 }

@@ -187,25 +187,36 @@ class _BrowserMenuPopoverState extends State<BrowserMenuPopover> {
         IconButton.ghost(
           size: ButtonSize.small,
           icon: const Icon(LucideIcons.minus),
-          onPressed: () {},
+          onPressed: () {
+            Provider.of<TabProvider>(context, listen: false).zoomOut();
+          },
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            "100%",
-            style: Theme.of(context).typography.base.copyWith(fontSize: 13),
+          padding: EdgeInsets.symmetric(horizontal: 12),
+          child: Consumer<TabProvider>(
+            builder: (context, provider, _) {
+              final zval =
+                  provider.focusedTab.transformationController?.value
+                      .getMaxScaleOnAxis() ??
+                  1;
+              return Text("${(zval * 100.0).toStringAsFixed(0)}%");
+            },
           ),
         ),
         IconButton.ghost(
           size: ButtonSize.small,
           icon: const Icon(LucideIcons.plus),
-          onPressed: () {},
+          onPressed: () {
+            Provider.of<TabProvider>(context, listen: false).zoomIn();
+          },
         ),
         const Gap(8),
         IconButton.ghost(
           size: ButtonSize.small,
           icon: const Icon(LucideIcons.maximize),
-          onPressed: () {},
+          onPressed: () {
+            Provider.of<TabProvider>(context, listen: false).resetZoom();
+          },
         ),
       ],
     );
