@@ -115,24 +115,6 @@ class TabPaneWidget extends StatelessWidget {
                 ),
 
                 Spacer(),
-                Consumer<BookmarkProvider>(
-                  builder: (context, bookmarkProvider, _) {
-                    final isBookmarked = bookmarkProvider.isBookmarked(
-                      focusedTab.page.url,
-                    );
-                    return IconButton.ghost(
-                      icon: Icon(
-                        isBookmarked ? Icons.bookmark : Icons.bookmark_outline,
-                      ),
-                      onPressed: () {
-                        bookmarkProvider.toggleBookmark(
-                          focusedTab.page.url,
-                          title: focusedTab.page.title,
-                        );
-                      },
-                    );
-                  },
-                ),
 
                 // IconButton.ghost(icon: Icon(Icons.share), onPressed: () {}),
                 Expanded(
@@ -163,14 +145,27 @@ class TabPaneWidget extends StatelessWidget {
                             ),
                           ),
 
-                          // InputFeature.trailing(
-                          //   IconButton.ghost(
-                          //     icon: Icon(Icons.visibility),
-                          //     onPressed: () {
-                          //       provider.toggleViewMode();
-                          //     },
-                          //   ),
-                          // ),
+                          InputFeature.trailing(
+                            Consumer<BookmarkProvider>(
+                              builder: (context, bookmarkProvider, _) {
+                                final isBookmarked = bookmarkProvider
+                                    .isBookmarked(focusedTab.page.url);
+                                return IconButton.outline(
+                                  icon: Icon(
+                                    isBookmarked
+                                        ? Icons.bookmark
+                                        : Icons.bookmark_outline,
+                                  ),
+                                  onPressed: () {
+                                    bookmarkProvider.toggleBookmark(
+                                      focusedTab.page.url,
+                                      title: focusedTab.page.title,
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
                         ],
                       ),
                     ),
