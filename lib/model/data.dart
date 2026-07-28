@@ -382,23 +382,68 @@ class FormSection extends Section {
   }
 }
 
-class MediaSection extends Section {
-  final List<Uint8List> items;
+abstract class FileDataAbstract {
+  final String name;
+  final String? mimeType;
+  Future<Uint8List> Function([int? offset, int? length]) get getBytes;
 
-  MediaSection({required this.items});
+  FileDataAbstract({required this.name, this.mimeType});
+
+  Map<String, Object?> toJson() => {
+    "name": name,
+    "mimeType": mimeType,
+    "bytes": "unreachable",
+  };
+
+  factory FileDataAbstract.fromJson(Map<String, Object?> json) {
+    try {
+      final bytes = Uint8List.fromList((json['bytes'] as List).cast<int>());
+
+      return PreLoadedFile(
+        bytes,
+        name: json['name'] as String,
+        mimeType: json['mimeType'] as String?,
+      );
+    } catch (e) {
+      throw UnsupportedError("Unsupported file type");
+    }
+  }
+}
+
+class PreLoadedFile extends FileDataAbstract {
+  final Uint8List bytes;
+
+  PreLoadedFile(this.bytes, {required super.name, super.mimeType});
+
+  @override
+  Future<Uint8List> Function([int? offset, int? length]) get getBytes =>
+      ([int? offset, int? length]) {
+        offset = offset ?? 0;
+        length = length ?? bytes.length;
+        return Future.value(bytes.sublist(offset, offset + length));
+      };
+}
+
+class MediaSection extends Section {
+  final List<FileDataAbstract> items;
+
+  bool downloadMode;
+
+  MediaSection({required this.items, this.downloadMode = false});
 
   @override
   Map<String, dynamic> toJson() {
     return {
-      'type': 'media',
-      "data": {"items": items.map((e) => e.toList()).toList()},
+      "downloadMode": downloadMode,
+      'data': {"items": items.map((e) => e.toJson())},
     };
   }
 
   factory MediaSection.fromJson(Map<String, dynamic> json) {
     return MediaSection(
-      items: (json['items'] as List)
-          .map((e) => Uint8List.fromList((e as List).cast<int>()))
+      downloadMode: json["downloadMode"] ?? true,
+      items: (json["data"]["items"] as List)
+          .map((e) => FileDataAbstract.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
   }

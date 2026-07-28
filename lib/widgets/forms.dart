@@ -173,7 +173,7 @@ class _FormSectionState extends State<FormSectionWidget> {
             FormValidationMode.changed,
             FormValidationMode.submitted,
           },
-          child: FileFieldWidget(field: f),
+          child: FileUploadWidget(field: f),
         );
     }
   }
