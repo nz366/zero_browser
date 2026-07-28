@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
+import 'package:flutter/widgets.dart';
 import 'package:zero_browser/model/forms.dart';
+import 'package:zero_browser/widgets/browser/errors.dart';
 
 export 'package:zero_browser/model/forms.dart';
 
@@ -307,6 +309,7 @@ class BrowserPage {
             FormSection s => s.toJson().toString(),
             MediaSection s => s.items.toString(),
             CenteredSection s => s.section.toJson().toString(),
+            BrowserWidget s => s.toJson().toString(),
           };
         })
         .join("\n");
@@ -398,5 +401,18 @@ class MediaSection extends Section {
           .map((e) => Uint8List.fromList((e as List).cast<int>()))
           .toList(),
     );
+  }
+}
+
+class BrowserWidget extends Section {
+  final Widget widget;
+
+  BrowserWidget(this.widget);
+
+  @override
+  Map<String, dynamic> toJson() => {};
+
+  factory BrowserWidget.fromJson(Map<String, dynamic> json) {
+    return BrowserWidget(BrowserError(null, error: "Unknown"));
   }
 }

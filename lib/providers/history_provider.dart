@@ -184,9 +184,11 @@ class TabProvider extends ChangeNotifier {
     } on CancelledException catch (_) {
       // Intentionally do nothing and let the new load take over, or just exit.
     } catch (e) {
-      if (targetTab.loadToken != token) return; // Ignore if overwritten
-
-      targetTab.page.content = [MarkdownSection(e.toString())];
+      if (targetTab.loadToken != token) return;
+      targetTab.page.content = [
+        BrowserWidget(BrowserError(() => loadTab(), error: e.toString())),
+      ];
+    } finally {
       targetTab.loading = false;
       notifyListeners();
     }
