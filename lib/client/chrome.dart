@@ -1,8 +1,6 @@
 import 'dart:async';
+import 'package:http/http.dart' as http;
 import 'package:puppeteer/puppeteer.dart';
-import 'package:zero_browser/client/client.dart';
-import 'package:html2md/html2md.dart' as html2md;
-import 'package:zero_browser/model/data.dart';
 
 class CDPInstance {
   Future<Browser>? _browser;
@@ -48,22 +46,16 @@ class CDPInstance {
   }
 }
 
-class ChromiumCDP extends RequestTransformer {
+class ChromiumCDP {
   static final CDPInstance instance = CDPInstance();
 
-  ChromiumCDP({Uri? uri}) : super(host: ["*"], uri: uri ?? Uri());
+  Future<http.Response> getData(String url) async {
+    try {
+      final html = await instance.readPage(Uri.parse(url));
 
-  @override
-  RequestTransformer withUri(Uri uri) => ChromiumCDP(uri: uri);
-
-  @override
-  Future<DataResponse> getData() async {
-    final html = await instance.readPage(uri);
-    final md = html2md.convert(html);
-    return DataResponse(
-      body: [MarkdownSection(md)],
-      statusCode: 200,
-      title: uri.toString(),
-    );
+      return http.Response(html, 200);
+    } catch (e) {
+      return http.Response("Error", 500);
+    }
   }
 }

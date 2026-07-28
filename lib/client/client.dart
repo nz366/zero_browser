@@ -1,201 +1,49 @@
-import 'package:http/http.dart' as http;
-import 'package:zero_browser/client/hosts/basichtml.dart';
-import 'package:zero_browser/client/hosts/chrome.dart';
-import 'package:zero_browser/client/hosts/localfile.dart';
-import 'package:zero_browser/client/internal/browser.dart';
-import 'package:zero_browser/model/data.dart';
-import 'package:zero_browser/providers/history_provider.dart';
-import 'package:zero_browser/utils/uri.dart';
+export 'registry.dart';
+import 'dart:io' show File, HttpHeaders;
 
-class DataResponse {
-  final String title;
-  final List<Section> body;
-  final int statusCode;
-  final Uri? sourceUri;
+import 'package:http/http.dart';
+import 'package:mime/mime.dart';
+import 'package:zero_browser/utils/utils.dart';
 
-  DataResponse({
-    required this.body,
-    required this.statusCode,
-    required this.title,
-    this.sourceUri,
-  });
-
-  factory DataResponse.fromHttpResponse(
-    http.Response resp, [
-    String? title,
-    Uri? sourceUri,
-  ]) {
-    return DataResponse(
-      title: title ?? "Response",
-      body: [MarkdownSection(resp.body)],
-      statusCode: resp.statusCode,
-      sourceUri: sourceUri,
-    );
+class Client {
+  Future<Response> httpRequest(String url, {throwError = false}) async {
+    return await httpUriRequest(Uri.parse(url), throwError: throwError);
   }
 
-  DataResponse copyWith({
-    List<Section>? body,
-    int? statusCode,
-    String? title,
-    Uri? sourceUri,
-  }) {
-    return DataResponse(
-      body: body ?? this.body,
-      statusCode: statusCode ?? this.statusCode,
-      title: title ?? this.title,
-      sourceUri: sourceUri ?? this.sourceUri,
-    );
-  }
-}
+  Future<Response> httpUriRequest(Uri url, {throwError = false}) async {
+    final response = await get(url.insertOrIgnore(sceheme: "https://"));
 
-abstract class RequestTransformer {
-  final Uri uri;
-  final List<String> host;
-
-  RequestTransformer({required this.host, required this.uri});
-
-  RequestTransformer withUri(Uri uri);
-
-  Future<DataResponse> getData() async {
-    final response = await http.get(uri);
-
-    // "content-type" -> "text/html; charset=utf-8"
-
-    var contentType = response.headers['content-type'] ?? '';
-
-    if (contentType.contains('text/html')) {
-      contentType = 'text/html';
-    }
-
-    switch (contentType) {
-      case "text/html":
-        return usefulHtmlContent(
-          response,
-          uri.toString(),
-        ).copyWith(sourceUri: uri);
-      case "image/jpeg":
-      case "image/png":
-      case "image/webp":
-      case "image/jpg":
-      case "image/svg+xml":
-      case "image/gif":
-      case "image/bmp":
-      case "image/tiff":
-      case "image/avif":
-      case "image/apng":
-        return DataResponse(
-          body: [
-            MediaSection(items: [response.bodyBytes]),
-          ],
-          statusCode: response.statusCode,
-          title: "Image",
-          sourceUri: uri,
-        );
-      default:
-        return DataResponse(
-          body: [MarkdownSection("```$contentType\n ${response.body}\n```")],
-          statusCode: response.statusCode,
-          title: "$contentType ${cleanUri(uri)}",
-          sourceUri: uri,
-        );
-    }
-  }
-}
-
-class DefaultRequest extends RequestTransformer {
-  DefaultRequest({required super.uri}) : super(host: ["*"]);
-
-  @override
-  RequestTransformer withUri(Uri uri) => DefaultRequest(uri: uri);
-}
-
-class RequesterRegistry {
-  static final List<RequestTransformer> _transformers = [];
-
-  /// Registers a transformer, preventing duplicates and keeping the list sorted
-  /// by domain length (longest first) for prefix matching.
-  static void register(RequestTransformer transformer) {
-    // Prevent duplicates by domain
-    if (_transformers.any((t) => t.host == transformer.host)) {
-      return;
-    }
-
-    _transformers.add(transformer);
-    // Sort by domain length descending for more specific matches
-    _transformers.sort((a, b) => b.host.length.compareTo(a.host.length));
-  }
-
-  /// Resolves the transformer whose domain is the longest prefix of the URI.
-  static RequestTransformer resolve(TabData tab, String url) {
-    if (url.isEmpty) {
-      return BrowserRequest(uri: Uri.parse("browser:newtab"));
-    }
-
-    final baseUri = Uri.parse(tab.page.url);
-    var uri = baseUri.resolve(url);
-
-    switch (uri.scheme) {
-      case "browser":
-        return BrowserRequest(uri: uri);
-      case "file":
-        return Localfile(uri: uri);
-      case "chrome":
-        final realUri = uri.toString().replaceFirst("chrome:", "");
-        return ChromiumCDP(uri: Uri.parse(realUri));
-      case "":
-        uri = Uri.parse("https:$uri");
-      case "http":
-      case "https":
-        final template = findResolvers(uri);
-        if (template != null) {
-          return template.withUri(uri);
-        }
-    }
-    return DefaultRequest(uri: uri);
-  }
-
-  // Optional: for debugging or testing
-  static List<RequestTransformer> get all => List.unmodifiable(_transformers);
-
-  static void clear() {
-    _transformers.clear();
-  }
-
-  static RequestTransformer? findResolvers(Uri uri) {
-    for (final transformer in _transformers) {
-      if (transformer.host.contains(uri.host)) {
-        return transformer;
-      }
-    }
-    return null;
-  }
-}
-
-Future<DataResponse> fetchData(TabData tab, String uri) async {
-  final resolver = RequesterRegistry.resolve(tab, uri);
-  Uri targetUri = Uri.parse(uri);
-  try {
-    final response = await resolver.getData();
-
-    if (response.statusCode == 200) {
-      return response;
-    } else {
-      return response.copyWith(
-        body: [
-          MarkdownSection(
-            'Request failed with status: ${response.statusCode}.',
-          ),
-        ],
-        sourceUri: targetUri,
-        statusCode: response.statusCode,
+    if (throwError && response.statusCode != 200) {
+      throw Exception(
+        "Failed with unexceptable status code: ${response.statusCode}",
       );
     }
-  } catch (e) {
-    return DataResponse(
-      body: [MarkdownSection("Network error ($e)")],
-      statusCode: 500,
-      title: "Error",
-      sourceUri: targetUri,
-    );
+
+    return response;
+  }
+
+  Future<Response> markdownRequest(String url) async {
+    return await get(Uri.parse(url), headers: {'Accept': 'text/markdown'});
+  }
+
+  Future<Response> localRequest(String path) async {
+    final file = File(path);
+
+    if (await file.exists()) {
+      try {
+        final mimeTypeString =
+            lookupMimeType(path) ?? 'application/octet-stream';
+
+        final headers = {HttpHeaders.contentTypeHeader: mimeTypeString};
+
+        final bytes = await file.readAsBytes();
+
+        return Response.bytes(bytes, 200, headers: headers);
+      } catch (e) {
+        return Response("File read error $e", 500);
+      }
+    } else {
+      return Response("File doesn't exist", 404);
+    }
   }
 }

@@ -1,50 +1,109 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart' show compute;
 import 'package:html/dom.dart';
-import 'package:html/parser.dart';
-import 'package:html/parser.dart' as html_parser;
+import 'package:html/dom.dart' as html;
+import 'package:html/parser.dart' as html;
 import 'package:html2md/html2md.dart' as html2md;
-import 'package:http/http.dart' as http;
 import 'package:zero_browser/client/client.dart';
-import 'package:zero_browser/model/data.dart';
+import 'package:zero_browser/model/model.dart';
 
 String? htmlDocumentTitle(Document document) {
   return document.querySelector("title")?.text ??
       document.querySelector("meta[property='og:title']")?.text;
 }
 
-DataResponse usefulHtmlContent(http.Response response, String? fallbackTitle) {
-  final string = response.body;
-  final document = parse(string);
+class HtmlProfile implements RequestProfile {
+  @override
+  RequestProfile copyWith({getContent}) {
+    return this;
+  }
+
+  @override
+  Future<Structure> Function(Client client, String path) get getContent =>
+      getContentstatic;
+
+  Future<Structure> getContentstatic(Client client, String path) async {
+    final response = await client.httpRequest(path);
+
+    final contentType = ContentType.parse(
+      response.headers['content-type'] ?? '',
+    );
+
+    switch (contentType.mimeType) {
+      case "text/html":
+        return defaultHtmlString(response.body, path);
+      case "image/jpeg":
+      case "image/png":
+      case "image/webp":
+      case "image/jpg":
+      case "image/svg+xml":
+      case "image/gif":
+      case "image/bmp":
+      case "image/tiff":
+      case "image/avif":
+      case "image/apng":
+        return Structure(
+          body: [
+            MediaSection(
+              items: [
+                PreLoadedFile(response.bodyBytes, name: path.split("/").last),
+              ],
+            ),
+          ],
+          title: path,
+        );
+
+      default:
+        return Structure(
+          body: [
+            MediaSection(
+              items: [
+                PreLoadedFile(response.bodyBytes, name: path.split("/").last),
+              ],
+              downloadMode: true,
+            ),
+          ],
+          title: path,
+          statusCode: response.statusCode,
+        );
+    }
+  }
+}
+
+class FileProfile implements RequestProfile {
+  @override
+  RequestProfile copyWith({getContent}) {
+    return this;
+  }
+
+  @override
+  Future<Structure> Function(Client client, String path) get getContent =>
+      getContentstatic;
+
+  static Future<Structure> getContentstatic(Client client, String path) async {
+    final response = await client.localRequest(path);
+    return defaultHtmlString(response.body, path);
+  }
+}
+
+Future<Structure> defaultHtmlString(String data, String fallbackTitle) async {
+  final document = await compute(html.parse, data);
+  return defaultHtml(document, fallbackTitle);
+}
+
+Structure defaultHtml(html.Document document, String fallbackTitle) {
   final title = htmlDocumentTitle(document);
+  document.querySelectorAll('style').forEach((element) => element.remove());
+  document.querySelectorAll('script').forEach((element) => element.remove());
 
-  var mainContent = string.split("<body").last.split("</body>").first;
+  final body = document.querySelectorAll("body");
 
-  final firstindex = mainContent.indexOf(">");
+  final content = html2md.convert(body.first.innerHtml);
 
-  mainContent = mainContent.substring(firstindex + 1, mainContent.length);
-
-  // final main_content = RegExp(
-  //   r'<body[^>]*>(.*?)</body>',
-  //   multiLine: true,
-  // ).allMatches(string).map((e) => e.group(1)).join('');
-  var mdText = html2md.convert(mainContent);
-
-  return DataResponse(
-    body: [MarkdownSection(mdText)],
-    statusCode: response.statusCode,
-    title: title ?? fallbackTitle ?? "No Title",
+  return Structure(
+    body: [MarkdownSection(content)],
+    statusCode: 200,
+    title: title ?? fallbackTitle,
   );
-}
-
-Document cleanHtmlSource(String body) {
-  Document dom = html_parser.parse(body);
-  dom.querySelectorAll('style').forEach((element) => element.remove());
-  return dom;
-}
-
-List<Section> documentToSections(Document dom) {
-  final mainContent = (dom.body?.querySelector("#bodyContent")?.innerHtml);
-
-  var mdText = html2md.convert(mainContent!);
-
-  return [MarkdownSection(mdText)];
 }

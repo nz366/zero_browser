@@ -1,13 +1,5 @@
 import 'package:provider/provider.dart';
-import 'package:syntax_highlight/syntax_highlight.dart';
-import 'package:zero_browser/client/client.dart';
-import 'package:zero_browser/client/hosts/bluebird.dart';
-import 'package:zero_browser/client/hosts/github.dart';
-import 'package:zero_browser/client/hosts/galleries.dart';
-import 'package:zero_browser/client/hosts/hackernews.dart';
-import 'package:zero_browser/client/hosts/markdown.dart';
-import 'package:zero_browser/client/hosts/redlib.dart';
-import 'package:zero_browser/client/hosts/wikimedia.dart';
+import 'package:zero_browser/client/collection.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:zero_browser/ui/tab.dart';
 import 'package:zero_browser/providers/theme_provider.dart';
@@ -18,15 +10,7 @@ import 'package:zero_browser/providers/bookmark_provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  RequesterRegistry.register(HackernewsRequest());
-  RequesterRegistry.register(MarkdownRequest());
-  RequesterRegistry.register(RedlibRequest());
-  RequesterRegistry.register(Mediawiki());
-  RequesterRegistry.register(GiteaRequest());
-  RequesterRegistry.register(GramRequest());
-  RequesterRegistry.register(GurRequest());
-  RequesterRegistry.register(BlueBirdRequest());
-  await Highlighter.initialize(['dart']);
+  registerDefaults();
 
   runApp(
     MultiProvider(
