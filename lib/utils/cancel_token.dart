@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:zero_browser/client/client.dart';
-
 class CancelledException implements Exception {
   final String message;
   CancelledException([this.message = 'The operation was cancelled.']);
@@ -15,12 +13,16 @@ class CancelledException implements Exception {
 class CancellationToken {
   final Completer<void> _completer = Completer<void>();
 
+  CancellationToken() {
+    _completer.future.catchError((_) {});
+  }
+
   /// Returns true if the token has been cancelled.
   bool get isCancelled => _completer.isCompleted;
 
   /// A future that completes with an error when cancelled.
-  Future<DataResponse?> get whenCancelled =>
-      _completer.future.then((e) => null);
+  Future<Never> get whenCancelled =>
+      _completer.future.then<Never>((_) => Completer<Never>().future);
 
   /// Cancels the execution, causing any `.run()` calls to immediately throw [CancelledException].
   void cancel() {
@@ -42,6 +44,6 @@ class CancellationToken {
     }
 
     // Future.any completes with the result or error of the first future to finish
-    return Future.any([future, whenCancelled as Future<T>]);
+    return Future.any([future, whenCancelled]);
   }
 }

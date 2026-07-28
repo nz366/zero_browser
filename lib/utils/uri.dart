@@ -23,3 +23,12 @@ Uri resolveWithPageUri(Uri child, Uri? parent) {
 
   return child;
 }
+
+extension UriUtils on Uri {
+  Uri insertOrIgnore({required String sceheme}) {
+    if (scheme.isEmpty) {
+      return replace(scheme: sceheme);
+    }
+    return this;
+  }
+}
