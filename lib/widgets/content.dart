@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' show Tooltip;
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' hide Tooltip;
+import 'package:zero_browser/client/client.dart';
 import 'package:zero_browser/model/data.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -342,7 +343,7 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
 
         final parsed = Uri.parse(url);
 
-        final withbase = resolveWithPageUri(parsed, widget.baseUri);
+        final withbase = parsed.resolveWithBase(base: widget.baseUri);
 
         if (url != withbase.toString()) {
           return ThumbnailWidget(
@@ -385,7 +386,7 @@ MarkdownConfig markdownBrowserConfig(BuildContext context, BrowserPage page) {
           Uri uri = Uri.parse(url);
 
           if (uri.host.isEmpty) {
-            uri = resolveWithPageUri(uri, page.sourceUri);
+            uri = uri.resolveWithBase(base: page.sourceUri);
           }
 
           Provider.of<TabProvider>(

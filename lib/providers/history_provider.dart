@@ -13,7 +13,7 @@ import 'package:zero_browser/widgets/vendor/interactiveviewer.dart';
 final uuid = Uuid();
 
 class TabData {
-  String? id;
+  String id;
   bool loading = false;
   BrowserPage page;
 
@@ -30,56 +30,61 @@ class TabData {
 
   Client client = Client();
 
-  TabData({String? id, required this.page}) {
-    id = id ?? uuid.v4();
+  TabData({required this.id, required this.page}) {
     zoomTransformationController = TransformationController();
     scrollController = ScrollController();
   }
 
-  bool get hasBackwardHistory => _backHistory.isNotEmpty;
-  bool get hasForwardHistory => _forwardHistory.isNotEmpty;
+  List<String> _historyController = ["browser://newtab"];
+
+  int _current_history_index = 0;
+
+  bool get hasBackwardHistory => _current_history_index > 0;
+  bool get hasForwardHistory =>
+      _historyController.length > _current_history_index + 1;
 
   Future<void> visit(
     String url, {
     String? title,
     HistoryTransition? transitionType,
   }) async {
-    if (url.startsWith("browser://")) return;
+    if (!url.startsWith("browser://")) {
+      await appDatabase.transaction(() async {
+        final urlId = await appDatabase
+            .into(appDatabase.urls)
+            .insert(
+              UrlsCompanion.insert(url: url, title: Value(title)),
+              mode: InsertMode.insertOrIgnore,
+            );
 
-    await appDatabase.transaction(() async {
-      final urlId = await appDatabase
-          .into(appDatabase.urls)
-          .insert(
-            UrlsCompanion.insert(url: url, title: Value(title)),
-            mode: InsertMode.insertOrIgnore,
-          );
+        await appDatabase
+            .into(appDatabase.history)
+            .insert(HistoryCompanion.insert(urlId: urlId));
+      });
+    }
 
-      await appDatabase
-          .into(appDatabase.history)
-          .insert(HistoryCompanion.insert(urlId: urlId));
-    });
+    if (_historyController[_current_history_index] == url) {
+      return;
+    }
 
-    _backHistory.add(url);
+    _historyController.add(url);
+    _current_history_index++;
   }
 
-  final List<String> _backHistory = [];
-  final List<String> _forwardHistory = [];
-  String? _currentHistoryUrl;
-
   void backward({required void Function([String? url]) onUrlChange}) {
-    if (hasBackwardHistory) {
-      _forwardHistory.add(_currentHistoryUrl ?? "browser://newtab");
-      _currentHistoryUrl = _backHistory.removeLast();
-      onUrlChange(_currentHistoryUrl);
+    if (!hasBackwardHistory) {
+      return;
     }
+    _current_history_index--;
+    onUrlChange(_historyController[_current_history_index]);
   }
 
   void forward({required void Function([String? url]) onUrlChange}) {
-    if (hasForwardHistory) {
-      final to = _forwardHistory.removeAt(0);
-      _backHistory.add(_currentHistoryUrl!);
-      onUrlChange(to);
+    if (!hasForwardHistory) {
+      return;
     }
+    _current_history_index++;
+    onUrlChange(_historyController[_current_history_index]);
   }
 }
 
@@ -117,7 +122,7 @@ class TabProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeTab(TabData data) {
+  void closeTab(TabData data) {
     _tabs.removeWhere((element) => element.data.id == data.id);
     // Ensure focused index stays within bounds
     if (_focused >= _tabs.length && _tabs.isNotEmpty) {
@@ -177,7 +182,7 @@ class TabProvider extends ChangeNotifier {
     _tabs.add(
       TabPaneData(
         TabData(
-          id: focusedTab.id,
+          id: uuid.v4(),
           page: BrowserPage(
             url: url,
             title: Uri.parse(url).authority,

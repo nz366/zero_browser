@@ -109,7 +109,7 @@ void main() {
 
     test('MediaSection', () {
       final data = Uint8List.fromList([1, 2, 3, 4]);
-      final section = MediaSection(items: [data]);
+      final section = MediaSection(items: [PreLoadedFile(data, name: "name")]);
 
       final json = section.toJson();
       final decoded = Section.fromJson(json) as MediaSection;

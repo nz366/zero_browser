@@ -64,6 +64,7 @@ dependencies:
   visibility_detector: any
   mime: ^2.0.0
   collection: ^1.19.1
+  vector_math: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

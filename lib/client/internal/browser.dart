@@ -3,6 +3,7 @@ import 'package:zero_browser/client/client.dart';
 import 'package:zero_browser/client/internal/demo.dart';
 import 'package:zero_browser/database/database.dart';
 import 'package:zero_browser/model/model.dart';
+import 'package:zero_browser/utils/utils.dart';
 
 class BrowserPageProfile implements RequestProfile {
   @override
@@ -26,13 +27,13 @@ class BrowserPageProfile implements RequestProfile {
 
 
 # Other
-- [Demo](browser:demo)
+- [Demo](browser://demo)
 
 ''';
 
   Future<Structure> getContentstatic(Client client, String path) async {
     final uri = Uri.parse(path);
-    switch (uri.path) {
+    switch (uri.authority) {
       case "newtab":
         return Structure(
           body: [MarkdownSection(_newTabMarkdown)],
@@ -87,20 +88,36 @@ class BrowserPageProfile implements RequestProfile {
           title: "Bookmarks",
         );
       case "history":
+
+        //       nvalid argument(s): Invalid table passed to readTable: urls. This row does not contain values for that table.
+        // Please use readTableOrNull for outer joins.
         final visited = appDatabase.alias(appDatabase.urls, 'visited');
 
-        final query = appDatabase.select(appDatabase.history).join([
-          innerJoin(visited, visited.id.equalsExp(appDatabase.history.urlId)),
-        ]);
+        final query =
+            appDatabase.select(appDatabase.history).join([
+              innerJoin(
+                visited,
+                visited.id.equalsExp(appDatabase.history.urlId),
+              ),
+            ])..orderBy([
+              OrderingTerm(
+                expression: appDatabase.history.createdAt,
+                mode: OrderingMode.desc,
+              ),
+            ]);
 
         final rows = await query.get();
 
         final List<Map<String, String>> items = [
           for (final row in rows)
             {
-              "title":
+              "Title":
                   row.readTable(visited).title ?? row.readTable(visited).url,
-              "url": row.readTable(visited).url,
+              "Url": row.readTable(visited).url,
+              "Time": row
+                  .readTable(appDatabase.history)
+                  .createdAt
+                  .toRelativeTime(DateTime.now()),
             },
         ];
 

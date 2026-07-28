@@ -1,3 +1,4 @@
+import 'package:http/http.dart' show Response;
 import 'package:zero_browser/client/client.dart';
 import 'package:zero_browser/model/data.dart';
 
@@ -26,3 +27,5 @@ class Structure {
 
   Structure({required this.body, required this.title, int? statusCode});
 }
+
+typedef ClientResponse = Future<Response> Function(Client client);

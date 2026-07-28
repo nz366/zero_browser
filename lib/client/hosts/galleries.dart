@@ -10,7 +10,7 @@ class GallerySite implements SiteProfile {
   RequestProfile get request => RequestProfile(
     getContent: (Client client, String path) async {
       final response = await client.httpRequest(path);
-      return defaultHtmlString(response.body, "${path} gallery");
+      return defaultHtmlString(response.body, "$path gallery");
     },
   );
 }

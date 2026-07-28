@@ -6,12 +6,16 @@ import 'package:mime/mime.dart';
 import 'package:zero_browser/utils/utils.dart';
 
 class Client {
+  Uri? baseUri;
+
   Future<Response> httpRequest(String url, {throwError = false}) async {
     return await httpUriRequest(Uri.parse(url), throwError: throwError);
   }
 
   Future<Response> httpUriRequest(Uri url, {throwError = false}) async {
-    final response = await get(url.insertOrIgnore(sceheme: "https://"));
+    baseUri = url.insertOrIgnore(newScheme: "https://");
+
+    final response = await get(baseUri!);
 
     if (throwError && response.statusCode != 200) {
       throw Exception(
