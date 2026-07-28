@@ -1,53 +1,22 @@
-import 'package:flutter/foundation.dart';
+import 'package:drift/drift.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart'
     hide TabPaneData, TransformationController;
 import 'package:uuid/uuid.dart';
 import 'package:zero_browser/client/client.dart';
-import 'package:zero_browser/model/data.dart';
+import 'package:zero_browser/database/database.dart';
 import 'package:zero_browser/ui/tabpane.dart';
-import 'package:zero_browser/utils/cancel_token.dart';
-import 'package:zero_browser/utils/uri.dart';
+import 'package:zero_browser/model/model.dart';
+import 'package:zero_browser/utils/utils.dart';
+import 'package:zero_browser/widgets/browser/errors.dart';
 import 'package:zero_browser/widgets/vendor/interactiveviewer.dart';
 
 final uuid = Uuid();
 
-class LinkedHistory {
-  final String url;
-  final String title;
-  final DateTime dateTime;
-
-  final LinkedHistory parent;
-  List<LinkedHistory> children = [];
-
-  LinkedHistory({
-    required this.parent,
-    required this.url,
-    required this.title,
-    required this.dateTime,
-  });
-
-  void visit(String url, String title) {
-    LinkedHistory next = LinkedHistory(
-      url: url,
-      title: title,
-      dateTime: DateTime.now(),
-      parent: this,
-    );
-
-    children.add(next);
-  }
-}
-
 class TabData {
-  late final String id;
+  String? id;
   bool loading = false;
   BrowserPage page;
 
-  List<String> backHistory = [];
-  List<String> forwardHistory = [];
-  String? currentHistoryUrl;
-
-  // Controls cancellation for ongoing loads, wrapping the future in Future.any
   CancellationToken? loadToken;
 
   bool isRawViewMode = false;
@@ -56,28 +25,76 @@ class TabData {
 
   bool sidebarOpen = false;
 
-  TransformationController? transformationController;
-  TabData({required this.page}) {
-    id = uuid.v4();
-    currentHistoryUrl = page.url;
-    transformationController = TransformationController();
+  TransformationController? zoomTransformationController;
+  ScrollController? scrollController;
+
+  Client client = Client();
+
+  TabData({String? id, required this.page}) {
+    id = id ?? uuid.v4();
+    zoomTransformationController = TransformationController();
+    scrollController = ScrollController();
   }
 
-  void addHistory(String url) {
-    if (currentHistoryUrl != null && currentHistoryUrl != url) {
-      backHistory.add(currentHistoryUrl!);
-      forwardHistory.clear();
+  bool get hasBackwardHistory => _backHistory.isNotEmpty;
+  bool get hasForwardHistory => _forwardHistory.isNotEmpty;
+
+  Future<void> visit(
+    String url, {
+    String? title,
+    HistoryTransition? transitionType,
+  }) async {
+    if (url.startsWith("browser://")) return;
+
+    await appDatabase.transaction(() async {
+      final urlId = await appDatabase
+          .into(appDatabase.urls)
+          .insert(
+            UrlsCompanion.insert(url: url, title: Value(title)),
+            mode: InsertMode.insertOrIgnore,
+          );
+
+      await appDatabase
+          .into(appDatabase.history)
+          .insert(HistoryCompanion.insert(urlId: urlId));
+    });
+
+    _backHistory.add(url);
+  }
+
+  final List<String> _backHistory = [];
+  final List<String> _forwardHistory = [];
+  String? _currentHistoryUrl;
+
+  void backward({required void Function([String? url]) onUrlChange}) {
+    if (hasBackwardHistory) {
+      _forwardHistory.add(_currentHistoryUrl ?? "browser://newtab");
+      _currentHistoryUrl = _backHistory.removeLast();
+      onUrlChange(_currentHistoryUrl);
     }
   }
 
-  void setContent(DataResponse? response) {
-    page.content = response?.body ?? [MarkdownSection("## No Response")];
-    page.title = response?.title ?? "No Response";
-    page.sourceUri = response?.sourceUri;
+  void forward({required void Function([String? url]) onUrlChange}) {
+    if (hasForwardHistory) {
+      final to = _forwardHistory.removeAt(0);
+      _backHistory.add(_currentHistoryUrl!);
+      onUrlChange(to);
+    }
   }
 }
 
+enum HistoryTransition { newTab }
+
 class TabProvider extends ChangeNotifier {
+  void goBack() {
+    focusedTab.backward(onUrlChange: loadTab);
+  }
+
+  void goForward() {
+    focusedTab.forward(onUrlChange: loadTab);
+  }
+
+  Client client = Client();
   List<TabPaneData<TabData>> _tabs = [];
   int _focused = 0;
 
@@ -100,34 +117,6 @@ class TabProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void newTab() {
-    openTab("browser:newtab");
-    _focused = _tabs.length - 1; // Auto-focus new tab
-    notifyListeners();
-  }
-
-  void goBack() {
-    final targetTab = _tabs[focused].data;
-    if (targetTab.backHistory.isNotEmpty) {
-      targetTab.forwardHistory.add(
-        targetTab.currentHistoryUrl ?? targetTab.page.url,
-      );
-      final prevUrl = targetTab.backHistory.removeLast();
-      loadTab(prevUrl);
-    }
-  }
-
-  void goForward() {
-    final targetTab = _tabs[focused].data;
-    if (targetTab.forwardHistory.isNotEmpty) {
-      targetTab.backHistory.add(
-        targetTab.currentHistoryUrl ?? targetTab.page.url,
-      );
-      final nextUrl = targetTab.forwardHistory.removeLast();
-      loadTab(nextUrl);
-    }
-  }
-
   void removeTab(TabData data) {
     _tabs.removeWhere((element) => element.data.id == data.id);
     // Ensure focused index stays within bounds
@@ -146,43 +135,33 @@ class TabProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void navigateWithHistory([String? url]) {
-    String destination = url ?? focusedTab.page.url.toString();
-    focusedTab.addHistory(destination);
-    loadTab(destination);
-  }
-
   void loadTab([String? url]) async {
+    final targetTab = _tabs[focused].data;
+    if (url != null) {
+      targetTab.visit(url);
+    }
+
     url = url ?? _tabs[focused].data.page.url;
 
     if (url == "") return;
 
-    final targetTab = _tabs[focused].data;
-
-    targetTab.currentHistoryUrl = url;
     targetTab.page.url = url;
 
-    // Cancel the previous token if there is an ongoing load
     targetTab.loadToken?.cancel();
 
     final token = CancellationToken();
     targetTab.loadToken = token;
 
     try {
-      final data = fetchData(targetTab, url);
       targetTab.loading = true;
       notifyListeners();
+      final resolver = HostRegistry.resolve(url);
+      final content = resolver.getContent(targetTab.client, url);
+      final response = await token.run<Structure>(content);
 
-      // We run the future through the token to exit out of the await
-      // immediately when CancelledException is thrown durlng cancel()
-      final response = await token.run<DataResponse?>(data);
-
-      targetTab.setContent(response);
-      targetTab.loading = false;
-
-      notifyListeners();
+      targetTab.page.content = response.body;
+      targetTab.page.title = response.title;
     } on CancelledException catch (_) {
-      // Intentionally do nothing and let the new load take over, or just exit.
     } catch (e) {
       if (targetTab.loadToken != token) return;
       targetTab.page.content = [
@@ -194,6 +173,40 @@ class TabProvider extends ChangeNotifier {
     }
   }
 
+  void branchTab(String url) {
+    _tabs.add(
+      TabPaneData(
+        TabData(
+          id: focusedTab.id,
+          page: BrowserPage(
+            url: url,
+            title: Uri.parse(url).authority,
+            content: [],
+          ),
+        ),
+      ),
+    );
+    _focused = _tabs.length - 1;
+    loadTab(url);
+  }
+
+  void newTab() {
+    _tabs.add(
+      TabPaneData(
+        TabData(
+          id: uuid.v4(),
+          page: BrowserPage(
+            url: "browser://newtab",
+            title: "New Tab",
+            content: [],
+          ),
+        ),
+      ),
+    );
+    _focused = _tabs.length - 1;
+    loadTab();
+  }
+
   void cancelLoad() {
     final targetTab = _tabs[focused].data;
     if (targetTab.loading) {
@@ -201,18 +214,6 @@ class TabProvider extends ChangeNotifier {
       targetTab.loading = false;
       notifyListeners();
     }
-  }
-
-  void openTab(String url) {
-    _tabs.add(
-      TabPaneData(
-        TabData(
-          page: BrowserPage(url: url, title: cleanUriString(url), content: []),
-        ),
-      ),
-    );
-    _focused = _tabs.length - 1;
-    loadTab(url);
   }
 
   void toggleViewMode() {
@@ -233,7 +234,7 @@ class TabProvider extends ChangeNotifier {
 
   void submitForm(BrowserPage page, FormSection form) {
     final uri = newFormUri(Uri.parse(page.url), form);
-    navigateWithHistory(uri.toString());
+    loadTab(uri.toString());
   }
 
   void closeAllTabs() {
@@ -244,7 +245,7 @@ class TabProvider extends ChangeNotifier {
 
   void resetZoom() {
     Matrix4 newMatrix = Matrix4.identity();
-    focusedTab.transformationController?.value = newMatrix;
+    focusedTab.zoomTransformationController?.value = newMatrix;
     notifyListeners();
   }
 
@@ -271,15 +272,17 @@ class TabProvider extends ChangeNotifier {
       return;
     }
 
-    final newMatrix = focusedTab.transformationController!.value.clone();
+    final newMatrix = focusedTab.zoomTransformationController!.value.clone();
 
     newMatrix[0] = targetScale;
     newMatrix[5] = targetScale;
     newMatrix[10] = targetScale;
 
-    focusedTab.transformationController!.value = newMatrix;
+    focusedTab.zoomTransformationController!.value = newMatrix;
     notifyListeners();
   }
+
+  void openTab(String tab) {}
 }
 
 Uri newFormUri(Uri uri, FormSection form) {

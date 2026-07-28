@@ -67,7 +67,7 @@ class _BrowserMenuPopoverState extends State<BrowserMenuPopover> {
                 context,
                 icon: LucideIcons.history,
                 label: "History",
-                tab: "browser:history",
+                tab: "browser://history",
               ),
 
               _buildTabButton(
@@ -75,7 +75,7 @@ class _BrowserMenuPopoverState extends State<BrowserMenuPopover> {
                 context,
                 icon: LucideIcons.pin,
                 label: "Pinned",
-                tab: "browser:pinned",
+                tab: "browser://pinned",
               ),
 
               _buildTabButton(
@@ -83,7 +83,7 @@ class _BrowserMenuPopoverState extends State<BrowserMenuPopover> {
                 context,
                 icon: LucideIcons.star,
                 label: "Bookmarks",
-                tab: "browser:bookmarks",
+                tab: "browser://bookmarks",
               ),
 
               const Divider(height: 24),
@@ -107,7 +107,7 @@ class _BrowserMenuPopoverState extends State<BrowserMenuPopover> {
                 context,
                 icon: LucideIcons.settings,
                 label: "Settings",
-                tab: "browser:settings",
+                tab: "browser://settings",
               ),
 
               _buildMenuAction(
@@ -144,7 +144,7 @@ class _BrowserMenuPopoverState extends State<BrowserMenuPopover> {
     return Row(
       children: [
         Consumer<ThemeProvider>(
-          builder: (_, theme, __) {
+          builder: (_, theme, _) {
             return IconButton.ghost(
               size: ButtonSize.small,
               icon: Icon(
@@ -160,7 +160,7 @@ class _BrowserMenuPopoverState extends State<BrowserMenuPopover> {
         const Gap(8),
 
         Consumer<TabProvider>(
-          builder: (_, provider, __) {
+          builder: (_, provider, _) {
             return IconButton.ghost(
               size: ButtonSize.small,
               icon: Icon(
@@ -196,7 +196,7 @@ class _BrowserMenuPopoverState extends State<BrowserMenuPopover> {
           child: Consumer<TabProvider>(
             builder: (context, provider, _) {
               final zval =
-                  provider.focusedTab.transformationController?.value
+                  provider.focusedTab.zoomTransformationController?.value
                       .getMaxScaleOnAxis() ??
                   1;
               return Text("${(zval * 100.0).toStringAsFixed(0)}%");
@@ -234,7 +234,7 @@ class _BrowserMenuPopoverState extends State<BrowserMenuPopover> {
       icon: icon,
       label: label,
       onPressed: () {
-        provider.openTab(tab);
+        provider.branchTab(tab);
         closeOverlay(context);
       },
     );
