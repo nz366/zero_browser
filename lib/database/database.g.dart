@@ -298,11 +298,11 @@ class BookmarksCompanion extends UpdateCompanion<Bookmark> {
   }
 }
 
-class $HistoryTable extends History with TableInfo<$HistoryTable, HistoryData> {
+class $UrlsTable extends Urls with TableInfo<$UrlsTable, Url> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $HistoryTable(this.attachedDatabase, [this._alias]);
+  $UrlsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -324,6 +324,7 @@ class $HistoryTable extends History with TableInfo<$HistoryTable, HistoryData> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
   static const VerificationMeta _titleMeta = const VerificationMeta('title');
   @override
@@ -334,39 +335,16 @@ class $HistoryTable extends History with TableInfo<$HistoryTable, HistoryData> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _stemfromMeta = const VerificationMeta(
-    'stemfrom',
-  );
   @override
-  late final GeneratedColumn<int> stemfrom = GeneratedColumn<int>(
-    'stemfrom',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [id, url, title, stemfrom, createdAt];
+  List<GeneratedColumn> get $columns => [id, url, title];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'history';
+  static const String $name = 'urls';
   @override
   VerificationContext validateIntegrity(
-    Insertable<HistoryData> instance, {
+    Insertable<Url> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -388,10 +366,294 @@ class $HistoryTable extends History with TableInfo<$HistoryTable, HistoryData> {
         title.isAcceptableOrUnknown(data['title']!, _titleMeta),
       );
     }
-    if (data.containsKey('stemfrom')) {
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Url map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Url(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      url: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}url'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      ),
+    );
+  }
+
+  @override
+  $UrlsTable createAlias(String alias) {
+    return $UrlsTable(attachedDatabase, alias);
+  }
+}
+
+class Url extends DataClass implements Insertable<Url> {
+  final int id;
+  final String url;
+  final String? title;
+  const Url({required this.id, required this.url, this.title});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['url'] = Variable<String>(url);
+    if (!nullToAbsent || title != null) {
+      map['title'] = Variable<String>(title);
+    }
+    return map;
+  }
+
+  UrlsCompanion toCompanion(bool nullToAbsent) {
+    return UrlsCompanion(
+      id: Value(id),
+      url: Value(url),
+      title: title == null && nullToAbsent
+          ? const Value.absent()
+          : Value(title),
+    );
+  }
+
+  factory Url.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Url(
+      id: serializer.fromJson<int>(json['id']),
+      url: serializer.fromJson<String>(json['url']),
+      title: serializer.fromJson<String?>(json['title']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'url': serializer.toJson<String>(url),
+      'title': serializer.toJson<String?>(title),
+    };
+  }
+
+  Url copyWith({
+    int? id,
+    String? url,
+    Value<String?> title = const Value.absent(),
+  }) => Url(
+    id: id ?? this.id,
+    url: url ?? this.url,
+    title: title.present ? title.value : this.title,
+  );
+  Url copyWithCompanion(UrlsCompanion data) {
+    return Url(
+      id: data.id.present ? data.id.value : this.id,
+      url: data.url.present ? data.url.value : this.url,
+      title: data.title.present ? data.title.value : this.title,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Url(')
+          ..write('id: $id, ')
+          ..write('url: $url, ')
+          ..write('title: $title')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, url, title);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Url &&
+          other.id == this.id &&
+          other.url == this.url &&
+          other.title == this.title);
+}
+
+class UrlsCompanion extends UpdateCompanion<Url> {
+  final Value<int> id;
+  final Value<String> url;
+  final Value<String?> title;
+  const UrlsCompanion({
+    this.id = const Value.absent(),
+    this.url = const Value.absent(),
+    this.title = const Value.absent(),
+  });
+  UrlsCompanion.insert({
+    this.id = const Value.absent(),
+    required String url,
+    this.title = const Value.absent(),
+  }) : url = Value(url);
+  static Insertable<Url> custom({
+    Expression<int>? id,
+    Expression<String>? url,
+    Expression<String>? title,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (url != null) 'url': url,
+      if (title != null) 'title': title,
+    });
+  }
+
+  UrlsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? url,
+    Value<String?>? title,
+  }) {
+    return UrlsCompanion(
+      id: id ?? this.id,
+      url: url ?? this.url,
+      title: title ?? this.title,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (url.present) {
+      map['url'] = Variable<String>(url.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UrlsCompanion(')
+          ..write('id: $id, ')
+          ..write('url: $url, ')
+          ..write('title: $title')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HistoryTable extends History with TableInfo<$HistoryTable, HistoryData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HistoryTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _urlIdMeta = const VerificationMeta('urlId');
+  @override
+  late final GeneratedColumn<int> urlId = GeneratedColumn<int>(
+    'url_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES urls (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _visitFromMeta = const VerificationMeta(
+    'visitFrom',
+  );
+  @override
+  late final GeneratedColumn<int> visitFrom = GeneratedColumn<int>(
+    'visit_from',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES urls (id)',
+    ),
+  );
+  static const VerificationMeta _eventTypeMeta = const VerificationMeta(
+    'eventType',
+  );
+  @override
+  late final GeneratedColumn<int> eventType = GeneratedColumn<int>(
+    'event_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    urlId,
+    visitFrom,
+    eventType,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'history';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HistoryData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('url_id')) {
       context.handle(
-        _stemfromMeta,
-        stemfrom.isAcceptableOrUnknown(data['stemfrom']!, _stemfromMeta),
+        _urlIdMeta,
+        urlId.isAcceptableOrUnknown(data['url_id']!, _urlIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_urlIdMeta);
+    }
+    if (data.containsKey('visit_from')) {
+      context.handle(
+        _visitFromMeta,
+        visitFrom.isAcceptableOrUnknown(data['visit_from']!, _visitFromMeta),
+      );
+    }
+    if (data.containsKey('event_type')) {
+      context.handle(
+        _eventTypeMeta,
+        eventType.isAcceptableOrUnknown(data['event_type']!, _eventTypeMeta),
       );
     }
     if (data.containsKey('created_at')) {
@@ -413,18 +675,18 @@ class $HistoryTable extends History with TableInfo<$HistoryTable, HistoryData> {
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
-      url: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}url'],
-      )!,
-      title: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}title'],
-      ),
-      stemfrom: attachedDatabase.typeMapping.read(
+      urlId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}stemfrom'],
+        data['${effectivePrefix}url_id'],
+      )!,
+      visitFrom: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}visit_from'],
       ),
+      eventType: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}event_type'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -440,28 +702,26 @@ class $HistoryTable extends History with TableInfo<$HistoryTable, HistoryData> {
 
 class HistoryData extends DataClass implements Insertable<HistoryData> {
   final int id;
-  final String url;
-  final String? title;
-  final int? stemfrom;
+  final int urlId;
+  final int? visitFrom;
+  final int eventType;
   final DateTime createdAt;
   const HistoryData({
     required this.id,
-    required this.url,
-    this.title,
-    this.stemfrom,
+    required this.urlId,
+    this.visitFrom,
+    required this.eventType,
     required this.createdAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['url'] = Variable<String>(url);
-    if (!nullToAbsent || title != null) {
-      map['title'] = Variable<String>(title);
+    map['url_id'] = Variable<int>(urlId);
+    if (!nullToAbsent || visitFrom != null) {
+      map['visit_from'] = Variable<int>(visitFrom);
     }
-    if (!nullToAbsent || stemfrom != null) {
-      map['stemfrom'] = Variable<int>(stemfrom);
-    }
+    map['event_type'] = Variable<int>(eventType);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -469,13 +729,11 @@ class HistoryData extends DataClass implements Insertable<HistoryData> {
   HistoryCompanion toCompanion(bool nullToAbsent) {
     return HistoryCompanion(
       id: Value(id),
-      url: Value(url),
-      title: title == null && nullToAbsent
+      urlId: Value(urlId),
+      visitFrom: visitFrom == null && nullToAbsent
           ? const Value.absent()
-          : Value(title),
-      stemfrom: stemfrom == null && nullToAbsent
-          ? const Value.absent()
-          : Value(stemfrom),
+          : Value(visitFrom),
+      eventType: Value(eventType),
       createdAt: Value(createdAt),
     );
   }
@@ -487,9 +745,9 @@ class HistoryData extends DataClass implements Insertable<HistoryData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return HistoryData(
       id: serializer.fromJson<int>(json['id']),
-      url: serializer.fromJson<String>(json['url']),
-      title: serializer.fromJson<String?>(json['title']),
-      stemfrom: serializer.fromJson<int?>(json['stemfrom']),
+      urlId: serializer.fromJson<int>(json['urlId']),
+      visitFrom: serializer.fromJson<int?>(json['visitFrom']),
+      eventType: serializer.fromJson<int>(json['eventType']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -498,32 +756,32 @@ class HistoryData extends DataClass implements Insertable<HistoryData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'url': serializer.toJson<String>(url),
-      'title': serializer.toJson<String?>(title),
-      'stemfrom': serializer.toJson<int?>(stemfrom),
+      'urlId': serializer.toJson<int>(urlId),
+      'visitFrom': serializer.toJson<int?>(visitFrom),
+      'eventType': serializer.toJson<int>(eventType),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
 
   HistoryData copyWith({
     int? id,
-    String? url,
-    Value<String?> title = const Value.absent(),
-    Value<int?> stemfrom = const Value.absent(),
+    int? urlId,
+    Value<int?> visitFrom = const Value.absent(),
+    int? eventType,
     DateTime? createdAt,
   }) => HistoryData(
     id: id ?? this.id,
-    url: url ?? this.url,
-    title: title.present ? title.value : this.title,
-    stemfrom: stemfrom.present ? stemfrom.value : this.stemfrom,
+    urlId: urlId ?? this.urlId,
+    visitFrom: visitFrom.present ? visitFrom.value : this.visitFrom,
+    eventType: eventType ?? this.eventType,
     createdAt: createdAt ?? this.createdAt,
   );
   HistoryData copyWithCompanion(HistoryCompanion data) {
     return HistoryData(
       id: data.id.present ? data.id.value : this.id,
-      url: data.url.present ? data.url.value : this.url,
-      title: data.title.present ? data.title.value : this.title,
-      stemfrom: data.stemfrom.present ? data.stemfrom.value : this.stemfrom,
+      urlId: data.urlId.present ? data.urlId.value : this.urlId,
+      visitFrom: data.visitFrom.present ? data.visitFrom.value : this.visitFrom,
+      eventType: data.eventType.present ? data.eventType.value : this.eventType,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -532,75 +790,75 @@ class HistoryData extends DataClass implements Insertable<HistoryData> {
   String toString() {
     return (StringBuffer('HistoryData(')
           ..write('id: $id, ')
-          ..write('url: $url, ')
-          ..write('title: $title, ')
-          ..write('stemfrom: $stemfrom, ')
+          ..write('urlId: $urlId, ')
+          ..write('visitFrom: $visitFrom, ')
+          ..write('eventType: $eventType, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, url, title, stemfrom, createdAt);
+  int get hashCode => Object.hash(id, urlId, visitFrom, eventType, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is HistoryData &&
           other.id == this.id &&
-          other.url == this.url &&
-          other.title == this.title &&
-          other.stemfrom == this.stemfrom &&
+          other.urlId == this.urlId &&
+          other.visitFrom == this.visitFrom &&
+          other.eventType == this.eventType &&
           other.createdAt == this.createdAt);
 }
 
 class HistoryCompanion extends UpdateCompanion<HistoryData> {
   final Value<int> id;
-  final Value<String> url;
-  final Value<String?> title;
-  final Value<int?> stemfrom;
+  final Value<int> urlId;
+  final Value<int?> visitFrom;
+  final Value<int> eventType;
   final Value<DateTime> createdAt;
   const HistoryCompanion({
     this.id = const Value.absent(),
-    this.url = const Value.absent(),
-    this.title = const Value.absent(),
-    this.stemfrom = const Value.absent(),
+    this.urlId = const Value.absent(),
+    this.visitFrom = const Value.absent(),
+    this.eventType = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   HistoryCompanion.insert({
     this.id = const Value.absent(),
-    required String url,
-    this.title = const Value.absent(),
-    this.stemfrom = const Value.absent(),
+    required int urlId,
+    this.visitFrom = const Value.absent(),
+    this.eventType = const Value.absent(),
     this.createdAt = const Value.absent(),
-  }) : url = Value(url);
+  }) : urlId = Value(urlId);
   static Insertable<HistoryData> custom({
     Expression<int>? id,
-    Expression<String>? url,
-    Expression<String>? title,
-    Expression<int>? stemfrom,
+    Expression<int>? urlId,
+    Expression<int>? visitFrom,
+    Expression<int>? eventType,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (url != null) 'url': url,
-      if (title != null) 'title': title,
-      if (stemfrom != null) 'stemfrom': stemfrom,
+      if (urlId != null) 'url_id': urlId,
+      if (visitFrom != null) 'visit_from': visitFrom,
+      if (eventType != null) 'event_type': eventType,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
 
   HistoryCompanion copyWith({
     Value<int>? id,
-    Value<String>? url,
-    Value<String?>? title,
-    Value<int?>? stemfrom,
+    Value<int>? urlId,
+    Value<int?>? visitFrom,
+    Value<int>? eventType,
     Value<DateTime>? createdAt,
   }) {
     return HistoryCompanion(
       id: id ?? this.id,
-      url: url ?? this.url,
-      title: title ?? this.title,
-      stemfrom: stemfrom ?? this.stemfrom,
+      urlId: urlId ?? this.urlId,
+      visitFrom: visitFrom ?? this.visitFrom,
+      eventType: eventType ?? this.eventType,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -611,14 +869,14 @@ class HistoryCompanion extends UpdateCompanion<HistoryData> {
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
-    if (url.present) {
-      map['url'] = Variable<String>(url.value);
+    if (urlId.present) {
+      map['url_id'] = Variable<int>(urlId.value);
     }
-    if (title.present) {
-      map['title'] = Variable<String>(title.value);
+    if (visitFrom.present) {
+      map['visit_from'] = Variable<int>(visitFrom.value);
     }
-    if (stemfrom.present) {
-      map['stemfrom'] = Variable<int>(stemfrom.value);
+    if (eventType.present) {
+      map['event_type'] = Variable<int>(eventType.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -630,9 +888,9 @@ class HistoryCompanion extends UpdateCompanion<HistoryData> {
   String toString() {
     return (StringBuffer('HistoryCompanion(')
           ..write('id: $id, ')
-          ..write('url: $url, ')
-          ..write('title: $title, ')
-          ..write('stemfrom: $stemfrom, ')
+          ..write('urlId: $urlId, ')
+          ..write('visitFrom: $visitFrom, ')
+          ..write('eventType: $eventType, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -653,6 +911,7 @@ class $PreferencesTable extends Preferences
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
   static const VerificationMeta _valueMeta = const VerificationMeta('value');
   @override
@@ -730,7 +989,7 @@ class $PreferencesTable extends Preferences
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => const {};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   Preference map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
@@ -947,6 +1206,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $BookmarksTable bookmarks = $BookmarksTable(this);
+  late final $UrlsTable urls = $UrlsTable(this);
   late final $HistoryTable history = $HistoryTable(this);
   late final $PreferencesTable preferences = $PreferencesTable(this);
   @override
@@ -955,9 +1215,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     bookmarks,
+    urls,
     history,
     preferences,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'urls',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('history', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$BookmarksTableCreateCompanionBuilder =
@@ -1129,26 +1400,21 @@ typedef $$BookmarksTableProcessedTableManager =
       Bookmark,
       PrefetchHooks Function()
     >;
-typedef $$HistoryTableCreateCompanionBuilder =
-    HistoryCompanion Function({
+typedef $$UrlsTableCreateCompanionBuilder =
+    UrlsCompanion Function({
       Value<int> id,
       required String url,
       Value<String?> title,
-      Value<int?> stemfrom,
-      Value<DateTime> createdAt,
     });
-typedef $$HistoryTableUpdateCompanionBuilder =
-    HistoryCompanion Function({
+typedef $$UrlsTableUpdateCompanionBuilder =
+    UrlsCompanion Function({
       Value<int> id,
       Value<String> url,
       Value<String?> title,
-      Value<int?> stemfrom,
-      Value<DateTime> createdAt,
     });
 
-class $$HistoryTableFilterComposer
-    extends Composer<_$AppDatabase, $HistoryTable> {
-  $$HistoryTableFilterComposer({
+class $$UrlsTableFilterComposer extends Composer<_$AppDatabase, $UrlsTable> {
+  $$UrlsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1169,21 +1435,10 @@ class $$HistoryTableFilterComposer
     column: $table.title,
     builder: (column) => ColumnFilters(column),
   );
-
-  ColumnFilters<int> get stemfrom => $composableBuilder(
-    column: $table.stemfrom,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
 }
 
-class $$HistoryTableOrderingComposer
-    extends Composer<_$AppDatabase, $HistoryTable> {
-  $$HistoryTableOrderingComposer({
+class $$UrlsTableOrderingComposer extends Composer<_$AppDatabase, $UrlsTable> {
+  $$UrlsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1204,21 +1459,11 @@ class $$HistoryTableOrderingComposer
     column: $table.title,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<int> get stemfrom => $composableBuilder(
-    column: $table.stemfrom,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
-class $$HistoryTableAnnotationComposer
-    extends Composer<_$AppDatabase, $HistoryTable> {
-  $$HistoryTableAnnotationComposer({
+class $$UrlsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UrlsTable> {
+  $$UrlsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -1233,12 +1478,329 @@ class $$HistoryTableAnnotationComposer
 
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
+}
 
-  GeneratedColumn<int> get stemfrom =>
-      $composableBuilder(column: $table.stemfrom, builder: (column) => column);
+class $$UrlsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UrlsTable,
+          Url,
+          $$UrlsTableFilterComposer,
+          $$UrlsTableOrderingComposer,
+          $$UrlsTableAnnotationComposer,
+          $$UrlsTableCreateCompanionBuilder,
+          $$UrlsTableUpdateCompanionBuilder,
+          (Url, BaseReferences<_$AppDatabase, $UrlsTable, Url>),
+          Url,
+          PrefetchHooks Function()
+        > {
+  $$UrlsTableTableManager(_$AppDatabase db, $UrlsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UrlsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UrlsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UrlsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> url = const Value.absent(),
+                Value<String?> title = const Value.absent(),
+              }) => UrlsCompanion(id: id, url: url, title: title),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String url,
+                Value<String?> title = const Value.absent(),
+              }) => UrlsCompanion.insert(id: id, url: url, title: title),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$UrlsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UrlsTable,
+      Url,
+      $$UrlsTableFilterComposer,
+      $$UrlsTableOrderingComposer,
+      $$UrlsTableAnnotationComposer,
+      $$UrlsTableCreateCompanionBuilder,
+      $$UrlsTableUpdateCompanionBuilder,
+      (Url, BaseReferences<_$AppDatabase, $UrlsTable, Url>),
+      Url,
+      PrefetchHooks Function()
+    >;
+typedef $$HistoryTableCreateCompanionBuilder =
+    HistoryCompanion Function({
+      Value<int> id,
+      required int urlId,
+      Value<int?> visitFrom,
+      Value<int> eventType,
+      Value<DateTime> createdAt,
+    });
+typedef $$HistoryTableUpdateCompanionBuilder =
+    HistoryCompanion Function({
+      Value<int> id,
+      Value<int> urlId,
+      Value<int?> visitFrom,
+      Value<int> eventType,
+      Value<DateTime> createdAt,
+    });
+
+final class $$HistoryTableReferences
+    extends BaseReferences<_$AppDatabase, $HistoryTable, HistoryData> {
+  $$HistoryTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $UrlsTable _urlIdTable(_$AppDatabase db) =>
+      db.urls.createAlias('history__url_id__urls__id');
+
+  $$UrlsTableProcessedTableManager get urlId {
+    final $_column = $_itemColumn<int>('url_id')!;
+
+    final manager = $$UrlsTableTableManager(
+      $_db,
+      $_db.urls,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_urlIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $UrlsTable _visitFromTable(_$AppDatabase db) =>
+      db.urls.createAlias('history__visit_from__urls__id');
+
+  $$UrlsTableProcessedTableManager? get visitFrom {
+    final $_column = $_itemColumn<int>('visit_from');
+    if ($_column == null) return null;
+    final manager = $$UrlsTableTableManager(
+      $_db,
+      $_db.urls,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_visitFromTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$HistoryTableFilterComposer
+    extends Composer<_$AppDatabase, $HistoryTable> {
+  $$HistoryTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get eventType => $composableBuilder(
+    column: $table.eventType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$UrlsTableFilterComposer get urlId {
+    final $$UrlsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.urlId,
+      referencedTable: $db.urls,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UrlsTableFilterComposer(
+            $db: $db,
+            $table: $db.urls,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$UrlsTableFilterComposer get visitFrom {
+    final $$UrlsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.visitFrom,
+      referencedTable: $db.urls,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UrlsTableFilterComposer(
+            $db: $db,
+            $table: $db.urls,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$HistoryTableOrderingComposer
+    extends Composer<_$AppDatabase, $HistoryTable> {
+  $$HistoryTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get eventType => $composableBuilder(
+    column: $table.eventType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$UrlsTableOrderingComposer get urlId {
+    final $$UrlsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.urlId,
+      referencedTable: $db.urls,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UrlsTableOrderingComposer(
+            $db: $db,
+            $table: $db.urls,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$UrlsTableOrderingComposer get visitFrom {
+    final $$UrlsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.visitFrom,
+      referencedTable: $db.urls,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UrlsTableOrderingComposer(
+            $db: $db,
+            $table: $db.urls,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$HistoryTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HistoryTable> {
+  $$HistoryTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get eventType =>
+      $composableBuilder(column: $table.eventType, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$UrlsTableAnnotationComposer get urlId {
+    final $$UrlsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.urlId,
+      referencedTable: $db.urls,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UrlsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.urls,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$UrlsTableAnnotationComposer get visitFrom {
+    final $$UrlsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.visitFrom,
+      referencedTable: $db.urls,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UrlsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.urls,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$HistoryTableTableManager
@@ -1252,12 +1814,9 @@ class $$HistoryTableTableManager
           $$HistoryTableAnnotationComposer,
           $$HistoryTableCreateCompanionBuilder,
           $$HistoryTableUpdateCompanionBuilder,
-          (
-            HistoryData,
-            BaseReferences<_$AppDatabase, $HistoryTable, HistoryData>,
-          ),
+          (HistoryData, $$HistoryTableReferences),
           HistoryData,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool urlId, bool visitFrom})
         > {
   $$HistoryTableTableManager(_$AppDatabase db, $HistoryTable table)
     : super(
@@ -1273,35 +1832,93 @@ class $$HistoryTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                Value<String> url = const Value.absent(),
-                Value<String?> title = const Value.absent(),
-                Value<int?> stemfrom = const Value.absent(),
+                Value<int> urlId = const Value.absent(),
+                Value<int?> visitFrom = const Value.absent(),
+                Value<int> eventType = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => HistoryCompanion(
                 id: id,
-                url: url,
-                title: title,
-                stemfrom: stemfrom,
+                urlId: urlId,
+                visitFrom: visitFrom,
+                eventType: eventType,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                required String url,
-                Value<String?> title = const Value.absent(),
-                Value<int?> stemfrom = const Value.absent(),
+                required int urlId,
+                Value<int?> visitFrom = const Value.absent(),
+                Value<int> eventType = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => HistoryCompanion.insert(
                 id: id,
-                url: url,
-                title: title,
-                stemfrom: stemfrom,
+                urlId: urlId,
+                visitFrom: visitFrom,
+                eventType: eventType,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$HistoryTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({urlId = false, visitFrom = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (urlId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.urlId,
+                                referencedTable: $$HistoryTableReferences
+                                    ._urlIdTable(db),
+                                referencedColumn: $$HistoryTableReferences
+                                    ._urlIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+                    if (visitFrom) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.visitFrom,
+                                referencedTable: $$HistoryTableReferences
+                                    ._visitFromTable(db),
+                                referencedColumn: $$HistoryTableReferences
+                                    ._visitFromTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
         ),
       );
 }
@@ -1316,9 +1933,9 @@ typedef $$HistoryTableProcessedTableManager =
       $$HistoryTableAnnotationComposer,
       $$HistoryTableCreateCompanionBuilder,
       $$HistoryTableUpdateCompanionBuilder,
-      (HistoryData, BaseReferences<_$AppDatabase, $HistoryTable, HistoryData>),
+      (HistoryData, $$HistoryTableReferences),
       HistoryData,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool urlId, bool visitFrom})
     >;
 typedef $$PreferencesTableCreateCompanionBuilder =
     PreferencesCompanion Function({
@@ -1507,6 +2124,7 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$BookmarksTableTableManager get bookmarks =>
       $$BookmarksTableTableManager(_db, _db.bookmarks);
+  $$UrlsTableTableManager get urls => $$UrlsTableTableManager(_db, _db.urls);
   $$HistoryTableTableManager get history =>
       $$HistoryTableTableManager(_db, _db.history);
   $$PreferencesTableTableManager get preferences =>
