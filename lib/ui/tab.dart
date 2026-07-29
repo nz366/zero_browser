@@ -328,11 +328,10 @@ class _ContentAreaState extends State<ContentArea> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TabProvider>();
-    final scrollController = ScrollController();
 
     return BrowserInteractiveViewer(
       child: Scrollbar(
-        controller: scrollController,
+        controller: provider.focusedTab.scrollController,
         thickness: 8,
         trackVisibility: true,
         thumbVisibility: true,
@@ -344,7 +343,7 @@ class _ContentAreaState extends State<ContentArea> {
                 : const BoxConstraints(maxWidth: 1000),
             child: ContentView(
               page: provider.focusedTab.page,
-              scrollController: scrollController,
+              scrollController: provider.focusedTab.scrollController,
             ),
           ),
         ),
