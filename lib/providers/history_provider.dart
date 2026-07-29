@@ -25,15 +25,19 @@ class TabData {
 
   bool sidebarOpen = false;
 
-  TransformationController? zoomTransformationController;
-  ScrollController? scrollController;
+  final TransformationController zoomTransformationController;
+  final ScrollController scrollController;
 
   Client client = Client();
 
-  TabData({required this.id, required this.page}) {
-    zoomTransformationController = TransformationController();
-    scrollController = ScrollController();
-  }
+  TabData({
+    required this.id,
+    required this.page,
+    TransformationController? zoomTransformationController,
+    ScrollController? scrollController,
+  }) : zoomTransformationController =
+           zoomTransformationController ?? TransformationController(),
+       scrollController = scrollController ?? ScrollController();
 
   final List<String> _historyController = ["browser://newtab"];
 

@@ -65,6 +65,7 @@ class _ContentViewState extends State<ContentView> {
         padding: const EdgeInsets.only(left: 16, right: 16, top: 8.0),
 
         child: CustomScrollView(
+          key: PageStorageKey(context.watch<TabProvider>().focusedTab.id),
           controller: widget.scrollController,
           slivers: generateSlivers(context, widget.page),
         ),
