@@ -4,7 +4,6 @@ import 'package:flutter/material.dart' show Tooltip;
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' hide Tooltip;
-import 'package:zero_browser/client/client.dart';
 import 'package:zero_browser/model/data.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';

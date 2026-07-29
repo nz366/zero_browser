@@ -35,13 +35,12 @@ class TabData {
     scrollController = ScrollController();
   }
 
-  List<String> _historyController = ["browser://newtab"];
+  final List<String> _historyController = ["browser://newtab"];
 
-  int _current_history_index = 0;
+  int _historyIndex = 0;
 
-  bool get hasBackwardHistory => _current_history_index > 0;
-  bool get hasForwardHistory =>
-      _historyController.length > _current_history_index + 1;
+  bool get hasBackwardHistory => _historyIndex > 0;
+  bool get hasForwardHistory => _historyController.length > _historyIndex + 1;
 
   Future<void> visit(
     String url, {
@@ -63,28 +62,28 @@ class TabData {
       });
     }
 
-    if (_historyController[_current_history_index] == url) {
+    if (_historyController[_historyIndex] == url) {
       return;
     }
 
     _historyController.add(url);
-    _current_history_index++;
+    _historyIndex++;
   }
 
   void backward({required void Function([String? url]) onUrlChange}) {
     if (!hasBackwardHistory) {
       return;
     }
-    _current_history_index--;
-    onUrlChange(_historyController[_current_history_index]);
+    _historyIndex--;
+    onUrlChange(_historyController[_historyIndex]);
   }
 
   void forward({required void Function([String? url]) onUrlChange}) {
     if (!hasForwardHistory) {
       return;
     }
-    _current_history_index++;
-    onUrlChange(_historyController[_current_history_index]);
+    _historyIndex++;
+    onUrlChange(_historyController[_historyIndex]);
   }
 }
 

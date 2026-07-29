@@ -29,7 +29,7 @@ extension UriUtils on Uri {
     if (host.isEmpty) {
       final newScheme = base.scheme.isEmpty ? "https" : base.scheme;
       return Uri.parse(
-        "${base.host}${path.startsWith("/") ? "" : "/"}${path}",
+        "${base.host}${path.startsWith("/") ? "" : "/"}$path",
       ).insertOrIgnore(newScheme: "$newScheme://");
     }
 
