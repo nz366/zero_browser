@@ -107,7 +107,7 @@ void main() {
       expect(decoded.fields['agree'] is CheckboxField, true);
     });
 
-    test('MediaSection', () {
+    test('MediaSection', () async {
       final data = Uint8List.fromList([1, 2, 3, 4]);
       final section = MediaSection(items: [PreLoadedFile(data, name: "name")]);
 
@@ -115,7 +115,11 @@ void main() {
       final decoded = Section.fromJson(json) as MediaSection;
 
       expect(decoded.items.length, 1);
-      expect(decoded.items[0], data);
+
+      for (var element in decoded.items) {
+        final c = await element.getBytes();
+        expect(data[0], c[0]);
+      }
     });
   });
 
