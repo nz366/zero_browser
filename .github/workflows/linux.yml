@@ -3,10 +3,13 @@ permissions:
   contents: write
   actions: write
 # Trigger on version tags — e.g. git tag v1.2.3 && git push --tags
+# Also trigger on every push to `develop` to cut an automatic pre-release
 on:
   push:
     tags:
       - "v*.*.*"
+    branches:
+      - develop
 
   # Also allow triggering manually from the Actions tab
   workflow_dispatch:
@@ -253,22 +256,39 @@ jobs:
           name: flatpak
           path: dist/
 
+      # ---- Work out what kind of trigger this is ---------------------------
+      # 1. workflow_dispatch  -> use the tag the user typed in, honor `-` for prerelease
+      # 2. push of a v*.*.* tag -> use that tag, honor `-` for prerelease
+      # 3. push to `develop`   -> synthesize a rolling dev pre-release tag
       - name: Determine release tag
         id: tag
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "value=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+            TAG="${{ github.event.inputs.tag }}"
+            IS_PRERELEASE=$(echo "$TAG" | grep -q -- '-' && echo true || echo false)
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${GITHUB_REF_NAME}"
+            IS_PRERELEASE=$(echo "$TAG" | grep -q -- '-' && echo true || echo false)
           else
-            echo "value=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            # Triggered by a push to develop — cut a unique, always-prerelease build
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            TAG="v0.0.0-dev.${{ github.run_number }}+${SHORT_SHA}"
+            IS_PRERELEASE=true
           fi
+
+          echo "value=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=${IS_PRERELEASE}" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.value }}
           name: "Zero Browser ${{ steps.tag.outputs.value }}"
+          target_commitish: ${{ github.sha }}
           draft: false
-          prerelease: ${{ contains(steps.tag.outputs.value, '-') }}
+          prerelease: ${{ steps.tag.outputs.prerelease }}
+          # Dev pre-releases shouldn't steal the "Latest" badge from real releases
+          make_latest: ${{ steps.tag.outputs.prerelease == 'false' }}
           generate_release_notes: true
           body: |
             ## Installation
@@ -290,4 +310,3 @@ jobs:
             ZeroBrowser-linux-x64.tar.gz
 
 
-        
