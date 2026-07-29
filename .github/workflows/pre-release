@@ -1,0 +1,96 @@
+name: Pre-release on develop
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies
+        run: |
+          if [ -f pubspec.yaml ]; then
+            dart pub get
+          else
+            echo "No pubspec.yaml detected; skipping pub get"
+          fi
+
+      - name: Build (adjust to your project)
+        run: |
+          set -e
+          mkdir -p build || true
+          if [ -f pubspec.yaml ]; then
+            # Try common Dart build targets. Customize these commands for your repo.
+            if [ -f web/main.dart ] || [ -f web/index.html ]; then
+              if command -v dart >/dev/null 2>&1; then
+                dart compile js -o build/app.js web/main.dart || true
+              fi
+            fi
+            if [ -f bin/main.dart ]; then
+              dart compile exe -o build/app_exe bin/main.dart || true
+            fi
+          else
+            echo "No Dart project detected; skipping Dart-specific build steps"
+          fi
+
+      - name: Package build artifacts
+        run: |
+          mkdir -p release
+          if [ -d build ] && [ "$(ls -A build)" ]; then
+            tar -czf release/build-${{ github.sha }}.tar.gz build
+          else
+            # fallback: include repository files if nothing was built
+            git ls-files | tar -czf release/source-${{ github.sha }}.tar.gz -T -
+          fi
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-release-artifacts
+          path: release/*.tar.gz
+
+  release:
+    name: Create pre-release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pre-release-artifacts
+          path: release
+
+      - name: Create GitHub pre-release (draft)
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: prerelease-${{ github.run_number }}-${{ github.sha }}
+          release_name: Pre-release from develop (#${{ github.run_number }})
+          body: Auto-generated pre-release from develop (commit ${{ github.sha }})
+          draft: true
+          prerelease: true
+
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release/*.tar.gz
+          asset_name: build-${{ github.sha }}.tar.gz
+          asset_content_type: application/gzip
