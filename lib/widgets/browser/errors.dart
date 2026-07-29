@@ -3,7 +3,13 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 class BrowserError extends StatelessWidget {
   final String error;
   final Function()? onRetry;
-  const BrowserError(this.onRetry, {super.key, required this.error});
+  final String? heading;
+  const BrowserError({
+    super.key,
+    required this.error,
+    this.onRetry,
+    this.heading,
+  });
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -14,8 +20,8 @@ class BrowserError extends StatelessWidget {
           children: [
             const Icon(Icons.error_outline, size: 40, color: Colors.gray),
             const SizedBox(height: 12),
-            const Text(
-              "This page couldn't load",
+            Text(
+              heading ?? "This page couldn't load",
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 6),

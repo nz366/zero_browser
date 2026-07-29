@@ -6,11 +6,18 @@ import 'package:zero_browser/providers/theme_provider.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:zero_browser/database/database.dart';
 import 'package:zero_browser/providers/bookmark_provider.dart';
+import 'package:zero_browser/widgets/browser/errors.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   registerDefaults();
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return BrowserError(
+      heading: "This widget caused an error",
+      error: details.exception.toString(),
+    );
+  };
 
   runApp(
     MultiProvider(
@@ -35,7 +42,6 @@ class BroswserApp extends StatelessWidget {
       themeMode: themeProvider.themeMode,
       theme: themeProvider.lightTheme,
       darkTheme: themeProvider.darkTheme,
-      debugShowCheckedModeBanner: false,
       home: Scaffold(child: TabPaneWidget()),
     );
   }
