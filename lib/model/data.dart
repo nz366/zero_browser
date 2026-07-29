@@ -511,6 +511,6 @@ class BrowserWidget extends Section {
   Map<String, dynamic> toJson() => {};
 
   factory BrowserWidget.fromJson(Map<String, dynamic> json) {
-    return BrowserWidget(BrowserError(null, error: "Unknown"));
+    return BrowserWidget(Center(child: Icon(LucideIcons.fileQuestion)));
   }
 }

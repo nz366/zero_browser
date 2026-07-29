@@ -173,7 +173,9 @@ class TabProvider extends ChangeNotifier {
     } catch (e) {
       if (targetTab.loadToken != token) return;
       targetTab.page.content = [
-        BrowserWidget(BrowserError(() => loadTab(), error: e.toString())),
+        BrowserWidget(
+          BrowserError(onRetry: () => loadTab(), error: e.toString()),
+        ),
       ];
     } finally {
       targetTab.loading = false;
