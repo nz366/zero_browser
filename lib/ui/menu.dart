@@ -195,10 +195,11 @@ class _BrowserMenuPopoverState extends State<BrowserMenuPopover> {
           padding: EdgeInsets.symmetric(horizontal: 12),
           child: Consumer<TabProvider>(
             builder: (context, provider, _) {
-              final zval =
-                  provider.focusedTab.zoomTransformationController?.value
-                      .getMaxScaleOnAxis() ??
-                  1;
+              final zval = provider
+                  .focusedTab
+                  .zoomTransformationController
+                  .value
+                  .getMaxScaleOnAxis();
               return Text("${(zval * 100.0).toStringAsFixed(0)}%");
             },
           ),

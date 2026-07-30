@@ -255,7 +255,7 @@ class TabProvider extends ChangeNotifier {
 
   void resetZoom() {
     Matrix4 newMatrix = Matrix4.identity();
-    focusedTab.zoomTransformationController?.value = newMatrix;
+    focusedTab.zoomTransformationController.value = newMatrix;
     notifyListeners();
   }
 
@@ -282,13 +282,13 @@ class TabProvider extends ChangeNotifier {
       return;
     }
 
-    final newMatrix = focusedTab.zoomTransformationController!.value.clone();
+    final newMatrix = focusedTab.zoomTransformationController.value.clone();
 
     newMatrix[0] = targetScale;
     newMatrix[5] = targetScale;
     newMatrix[10] = targetScale;
 
-    focusedTab.zoomTransformationController!.value = newMatrix;
+    focusedTab.zoomTransformationController.value = newMatrix;
     notifyListeners();
   }
 

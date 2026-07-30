@@ -1,9 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:zero_browser/model/forms.dart';
-import 'package:zero_browser/widgets/browser/errors.dart';
 
 export 'package:zero_browser/model/forms.dart';
 
