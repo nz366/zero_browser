@@ -88,9 +88,6 @@ class BrowserPageProfile implements RequestProfile {
           title: "Bookmarks",
         );
       case "history":
-
-        //       nvalid argument(s): Invalid table passed to readTable: urls. This row does not contain values for that table.
-        // Please use readTableOrNull for outer joins.
         final visited = appDatabase.alias(appDatabase.urls, 'visited');
 
         final query =
