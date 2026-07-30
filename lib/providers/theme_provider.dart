@@ -39,11 +39,11 @@ class ThemeProvider extends ChangeNotifier {
   // Fallback styling for shadcn_flutter schemes
   ThemeData get lightTheme => ThemeData(
     colorScheme: ColorSchemes.lightSlate,
-    density: Density.compactDensity,
+    density: Density.defaultDensity,
   );
   ThemeData get darkTheme => ThemeData(
     colorScheme: ColorSchemes.darkSlate,
-    density: Density.compactDensity,
+    density: Density.defaultDensity,
   );
 
   ThemeProvider() {

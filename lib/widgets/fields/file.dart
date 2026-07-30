@@ -5,16 +5,16 @@ import 'package:zero_browser/model/data.dart' as forms;
 import 'package:file_picker/file_picker.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 
-class FileFieldWidget extends StatefulWidget {
+class FileUploadWidget extends StatefulWidget {
   final forms.FileField field;
 
-  const FileFieldWidget({super.key, required this.field});
+  const FileUploadWidget({super.key, required this.field});
 
   @override
-  State<FileFieldWidget> createState() => _FileFieldWidgetState();
+  State<FileUploadWidget> createState() => _FileUploadWidgetState();
 }
 
-class _FileFieldWidgetState extends State<FileFieldWidget> {
+class _FileUploadWidgetState extends State<FileUploadWidget> {
   bool _isDragging = false;
   bool _isHovering = false;
 
@@ -22,7 +22,7 @@ class _FileFieldWidgetState extends State<FileFieldWidget> {
     if (bytes <= 0) return "0 B";
     const suffixes = ["B", "KB", "MB", "GB", "TB"];
     var i = (log(bytes) / log(1024)).floor();
-    return ((bytes / pow(1024, i)).toStringAsFixed(1)) + ' ' + suffixes[i];
+    return '${(bytes / pow(1024, i)).toStringAsFixed(1)} ${suffixes[i]}';
   }
 
   String? _getFileSizeText(String? path) {
@@ -171,6 +171,96 @@ class _FileFieldWidgetState extends State<FileFieldWidget> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class FileDownloadWidget extends StatelessWidget {
+  final forms.MediaSection section;
+
+  final void Function(forms.FileDataAbstract) onDownload;
+  const FileDownloadWidget({
+    super.key,
+    required this.section,
+    required this.onDownload,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isHighlighted = false;
+    final theme = Theme.of(context);
+
+    final decoration = BoxDecoration(
+      color: isHighlighted
+          ? theme.colorScheme.primary.withOpacity(.05)
+          : theme.colorScheme.muted.withOpacity(.2),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(
+        color: isHighlighted
+            ? theme.colorScheme.primary
+            : theme.colorScheme.border,
+      ),
+    );
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 10),
+      padding: EdgeInsets.all(20),
+      decoration: decoration,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text("Downloads", style: theme.typography.h3),
+              Spacer(),
+              SizedBox(
+                width: 50,
+                height: 50,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    IconButton.ghost(
+                      icon: Icon(LucideIcons.download, size: 20),
+                    ),
+                    CircularProgressIndicator(value: 0, strokeWidth: 3),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          Gap(20),
+
+          Container(
+            padding: EdgeInsets.all(20),
+            constraints: BoxConstraints(minHeight: 50, maxHeight: 300),
+            decoration: decoration,
+            child: ListView.separated(
+              shrinkWrap: true,
+              separatorBuilder: (_, _) => Divider(),
+              itemCount: section.items.length,
+              itemBuilder: (context, index) {
+                final item = section.items[index];
+
+                return Row(
+                  children: [
+                    Icon(LucideIcons.file),
+                    Text(item.name),
+                    Spacer(),
+
+                    IconButton.ghost(
+                      icon: Icon(LucideIcons.download),
+                      onPressed: () {
+                        onDownload(item);
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
