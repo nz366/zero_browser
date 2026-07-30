@@ -4,6 +4,7 @@ import 'package:html2md/html2md.dart' as html2md;
 import 'package:zero_browser/client/client.dart';
 import 'package:zero_browser/client/hosts/basichtml.dart';
 import 'package:zero_browser/model/model.dart';
+import 'package:zero_browser/utils/utils.dart';
 
 class BlueBirdSite implements SiteProfile {
   @override
@@ -12,7 +13,9 @@ class BlueBirdSite implements SiteProfile {
   @override
   RequestProfile get request => RequestProfile(
     getContent: (Client client, String path) async {
-      final uri = Uri.parse(path).replace(host: domains.first);
+      final uri = Uri.parse(
+        path,
+      ).insertOrIgnore(newScheme: "https://").replace(host: domains.first);
 
       final response = await client.httpUriRequest(uri, throwError: false);
       final document = parse(response.body);

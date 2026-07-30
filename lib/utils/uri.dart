@@ -17,6 +17,39 @@ String cleanUri(Uri uri) {
 }
 
 extension UriUtils on Uri {
+  static Uri parseMalformed(
+    String data, {
+    String? defaultScheme,
+    List<String>? defaultHostSegments,
+  }) {
+    String scheme;
+    String host;
+    String path;
+
+    final parts = data.split("://");
+
+    if (parts.length == 2) {
+      scheme = parts.first;
+    } else {
+      scheme = defaultScheme ?? "https";
+    }
+
+    final part = parts.last;
+
+    final segments = part
+        .split("//")
+        .join("/")
+        .split("/")
+        .where((element) => element.isNotEmpty)
+        .toList();
+
+    host = segments.firstOrNull ?? "";
+
+    path = segments.skip(1).join('/');
+
+    return Uri(scheme: scheme, host: host, path: path);
+  }
+
   Uri insertOrIgnore({required String newScheme}) {
     if (scheme.isEmpty) {
       return Uri.parse("$newScheme${toString()}");
