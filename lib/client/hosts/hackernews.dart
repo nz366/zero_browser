@@ -1,116 +1,108 @@
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
 import 'package:zero_browser/client/client.dart';
 import 'package:html2md/html2md.dart' as html2md;
 import 'package:zero_browser/model/data.dart';
+import 'package:zero_browser/model/sites.dart';
+import 'package:zero_browser/utils/utils.dart';
 
-class HackernewsRequest extends RequestTransformer {
-  HackernewsRequest({Uri? uri})
-    : super(host: ["news.ycombinator.com"], uri: uri ?? Uri());
-
+class HackernewsSite implements SiteProfile {
   @override
-  RequestTransformer withUri(Uri uri) => HackernewsRequest(uri: uri);
-
+  List<String> get domains => ["news.ycombinator.com"];
   static const firebaseAPI = "https://hacker-news.firebaseio.com/v0";
   static const websiteHost = "https://news.ycombinator.com";
   @override
-  Future<DataResponse> getData() async {
-    final uriStr = uri.toString();
-    if (uriStr.contains('/item?id=')) {
-      final id = uriStr.split('=').last;
-      final itemResponse = await http.get(
-        Uri.parse('$firebaseAPI/item/$id.json'),
-      );
-      if (itemResponse.statusCode != 200) {
-        return DataResponse.fromHttpResponse(itemResponse, "HackerNews Error");
-      }
-
-      final item = jsonDecode(itemResponse.body);
-      if (item != null && item['type'] == 'story') {
-        final comments = await fetchcomments(item['kids'] ?? [], null);
-        String markdown = "# ${item['title'] ?? 'No Title'}\n\n";
-        if (item['url'] != null) {
-          markdown += "Source: (${item['url']})\n\n";
-        }
-        if (item['text'] != null) {
-          markdown += html2md.convert(item['text']);
-        }
-
-        return DataResponse(
-          body: [MarkdownSection(markdown), CommentThreadSection(comments)],
-          statusCode: 200,
-          title: item['title'] ?? 'Hacker News',
+  RequestProfile get request => RequestProfile(
+    getContent: (Client client, String path) async {
+      final uriStr = path;
+      if (uriStr.contains('/item?id=')) {
+        final id = uriStr.split('=').last;
+        final itemResponse = await client.httpRequest(
+          '$firebaseAPI/item/$id.json',
+          throwError: true,
         );
-      }
-    }
 
-    // For now, we only support the main page (top stories)
-    // In a full implementation, we'd handle different HackerNews URLs
-    final topStoriesResponse = await http.get(
-      Uri.parse('https://hacker-news.firebaseio.com/v0/topstories.json'),
-    );
-
-    if (topStoriesResponse.statusCode != 200) {
-      return DataResponse.fromHttpResponse(
-        topStoriesResponse,
-        "HackerNews Error",
-      );
-    }
-
-    final List<dynamic> storyIds = jsonDecode(topStoriesResponse.body);
-    // Limit to top 30 stories for performance
-    final limitedIds = storyIds.take(30).toList();
-
-    final List<Article> posts = [];
-
-    // Fetch details for each story in parallel
-    final storyFutures = limitedIds.map(
-      (id) => http.get(
-        Uri.parse('https://hacker-news.firebaseio.com/v0/item/$id.json'),
-      ),
-    );
-
-    final storyResponses = await Future.wait(storyFutures);
-
-    for (var response in storyResponses) {
-      if (response.statusCode == 200) {
-        final item = jsonDecode(response.body);
+        final item = jsonDecode(itemResponse.body);
         if (item != null && item['type'] == 'story') {
-          posts.add(
-            Article(
-              title: item['title'] ?? 'No Title',
-              content: item['url'] != null
-                  ? "Source: (${item['url']})\n\n${item['text'] != null ? html2md.convert(item['text']) : ''}"
-                  : (item['text'] != null ? html2md.convert(item['text']) : ''),
-              author: item['by'] ?? 'unknown',
-              time: DateTime.fromMillisecondsSinceEpoch(
-                (item['time'] ?? 0) * 1000,
-              ).toString(),
-              upvotes: item['score'] ?? 0,
-              subgroup: 'hacker-news',
-              url: 'https://news.ycombinator.com/item?id=${item['id']}',
-              thumbnail: item['thumbnail'] ?? '',
-            ),
+          final comments = await fetchcomments(
+            client,
+            item['kids'] ?? [],
+            null,
+          );
+          String markdown = "# ${item['title'] ?? 'No Title'}\n\n";
+          if (item['url'] != null) {
+            markdown += "Source: (${item['url']})\n\n";
+          }
+          if (item['text'] != null) {
+            markdown += html2md.convert(item['text']);
+          }
+
+          return Structure(
+            body: [MarkdownSection(markdown), CommentThreadSection(comments)],
+            statusCode: 200,
+            title: item['title'] ?? 'Hacker News',
           );
         }
       }
-    }
 
-    return DataResponse(
-      body: [
-        ArticleListSection(
-          title: "Hacker News",
-          layout: LayoutConfig.list,
-          articles: posts,
-        ),
-      ],
-      statusCode: 200,
-      title: "Hacker News",
-    );
-  }
+      final topStoriesResponse = await client.httpRequest(
+        '$firebaseAPI/topstories.json',
+        throwError: false,
+      );
+
+      final List<dynamic> storyIds = jsonDecode(topStoriesResponse.body);
+      final limitedIds = storyIds.take(30).toList();
+
+      final List<Article> posts = [];
+
+      final storyFutures = limitedIds.map(
+        (id) => client.httpRequest('$firebaseAPI/item/$id.json'),
+      );
+
+      final storyResponses = await Future.wait(storyFutures);
+
+      for (var response in storyResponses) {
+        if (response.statusCode == 200) {
+          final item = jsonDecode(response.body);
+          if (item != null && item['type'] == 'story') {
+            posts.add(
+              Article(
+                title: item['title'] ?? 'No Title',
+                content: item['url'] != null
+                    ? "Source: (${item['url']})\n\n${item['text'] != null ? html2md.convert(item['text']) : ''}"
+                    : (item['text'] != null
+                          ? html2md.convert(item['text'])
+                          : ''),
+                author: item['by'] ?? 'unknown',
+                time: DateTime.fromMillisecondsSinceEpoch(
+                  (item['time'] ?? 0) * 1000,
+                ).toString(),
+                upvotes: item['score'] ?? 0,
+                subgroup: 'hacker-news',
+                url: '$websiteHost/item?id=${item['id']}',
+                thumbnail: item['thumbnail'] ?? '',
+              ),
+            );
+          }
+        }
+      }
+
+      return Structure(
+        body: [
+          ArticleListSection(
+            title: "Hacker News",
+            layout: LayoutConfig.list,
+            articles: posts,
+          ),
+        ],
+        statusCode: 200,
+        title: "Hacker News",
+      );
+    },
+  );
 
   Future<List<CommentData>> fetchcomments(
+    Client client,
     List<dynamic> items,
     TimeOut? timeout,
   ) async {
@@ -128,8 +120,8 @@ class HackernewsRequest extends RequestTransformer {
               replies: [],
             );
           }
-          final commentResponse = await http.get(
-            Uri.parse('$firebaseAPI/item/$element.json'),
+          final commentResponse = await client.httpRequest(
+            '$firebaseAPI/item/$element.json',
           );
 
           if (commentResponse.statusCode != 200) {
@@ -146,7 +138,7 @@ class HackernewsRequest extends RequestTransformer {
 
           final kidslist = comment['kids'] ?? [];
 
-          final replies = await fetchcomments(kidslist, timeout);
+          final replies = await fetchcomments(client, kidslist, timeout);
 
           if (comment != null && comment['type'] == 'comment') {
             final htmlmd = html2md
@@ -177,16 +169,4 @@ class HackernewsRequest extends RequestTransformer {
 
     return Future.wait(futures);
   }
-}
-
-class TimeOut {
-  final Duration? maxDuration;
-
-  TimeOut({this.maxDuration}) : startTime = DateTime.now();
-
-  final DateTime startTime;
-
-  bool get isExpired => maxDuration == null
-      ? false
-      : startTime.add(maxDuration!).isBefore(DateTime.now());
 }

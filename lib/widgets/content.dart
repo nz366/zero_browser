@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart' show Tooltip;
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:provider/provider.dart';
@@ -7,36 +8,66 @@ import 'package:zero_browser/model/data.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:zero_browser/utils/uri.dart';
+import 'package:zero_browser/widgets/code.dart';
 import 'package:zero_browser/widgets/comment_threads/comment_tree.dart';
+import 'package:zero_browser/widgets/fields/file.dart';
 import 'package:zero_browser/widgets/forms.dart';
+
+class SourcePanel extends StatelessWidget {
+  const SourcePanel({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<TabProvider>();
+
+    return SingleChildScrollView(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: provider.focusedTab.isWideMode
+              ? const BoxConstraints()
+              : const BoxConstraints(maxWidth: 1000),
+          child: CodeSnippet(
+            constraints: BoxConstraints(minWidth: double.infinity),
+            code: CodeHighlighter(
+              mode: "json",
+              code: provider.focusedTab.page.content
+                  .map((e) => e.toJson())
+                  .join("\n"),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class ContentView extends StatefulWidget {
   final BrowserPage page;
-  const ContentView({super.key, required this.page});
+  final ScrollController scrollController;
+  const ContentView({
+    super.key,
+    required this.page,
+    required this.scrollController,
+  });
 
   @override
   State<ContentView> createState() => _ContentViewState();
 }
 
 class _ContentViewState extends State<ContentView> {
-  final ScrollController _scrollController = ScrollController();
   bool? hovering = false;
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
       onHover: (_) => hovering = true,
       onExit: (_) => hovering = null,
-      child: Scrollbar(
-        controller: _scrollController,
-        thumbVisibility: hovering,
-        trackVisibility: hovering,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16, top: 8.0),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16, right: 16, top: 8.0),
 
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: generateSlivers(context, widget.page),
-          ),
+        child: CustomScrollView(
+          key: PageStorageKey(context.watch<TabProvider>().focusedTab.id),
+          controller: widget.scrollController,
+          slivers: generateSlivers(context, widget.page),
         ),
       ),
     );
@@ -89,7 +120,7 @@ Widget sectionToWidget(
                 Provider.of<TabProvider>(
                   context,
                   listen: false,
-                ).openTab(article.url);
+                ).branchTab(article.url);
               },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,7 +154,7 @@ Widget sectionToWidget(
                 Provider.of<TabProvider>(
                   context,
                   listen: false,
-                ).openTab(article.url);
+                ).branchTab(article.url);
               },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,19 +236,38 @@ Widget sectionToWidget(
       useSliverAdapter,
     ),
     MediaSection mediaSection => wrapsliver(
+      mediaSection.downloadMode
+          ? FileDownloadWidget(
+              section: mediaSection,
+              onDownload: (item) async {
+                Future.microtask(() async {
+                  final bytes = await item.getBytes();
+                  File file = await File(item.name).create();
+                  await file.writeAsBytes(bytes);
+                });
+              },
+            )
+          : SizedBox(
+              height: MediaQuery.of(context).size.height * 0.8,
+              child: CarouselView(
+                children: mediaSection.items.map((e) async {
+                  final bytes = await e.getBytes();
+                  final String start = String.fromCharCodes(
+                    bytes.take(100),
+                  ).toLowerCase();
+                  if (start.contains('<svg') || start.contains('<?xml')) {
+                    return SvgPicture.memory(bytes, fit: BoxFit.contain);
+                  }
+                  return Image.memory(bytes, fit: BoxFit.contain);
+                }).toList(),
+              ),
+            ),
+      useSliverAdapter,
+    ),
+    BrowserWidget section => wrapsliver(
       SizedBox(
         height: MediaQuery.of(context).size.height * 0.8,
-        child: CarouselView(
-          children: mediaSection.items.map((e) {
-            final String start = String.fromCharCodes(
-              e.take(100),
-            ).toLowerCase();
-            if (start.contains('<svg') || start.contains('<?xml')) {
-              return SvgPicture.memory(e, fit: BoxFit.contain);
-            }
-            return Image.memory(e, fit: BoxFit.contain);
-          }).toList(),
-        ),
+        child: section.widget,
       ),
       useSliverAdapter,
     ),
@@ -261,6 +311,7 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
       url,
       errorBuilder: (c, e, s) {
         if (e is ArgumentError) {
+          print("Failed image ${widget.baseUri} $url");
           if (url.startsWith("//")) {
             return ThumbnailWidget(url: "https:$url", baseUri: widget.baseUri);
           }
@@ -290,10 +341,9 @@ class _ThumbnailWidgetState extends State<ThumbnailWidget> {
           );
         }
 
-        // ./path/file.jpg -> scheme + page.sourceUri.host + path/file.jpg
         final parsed = Uri.parse(url);
 
-        final withbase = resolveWithPageUri(parsed, widget.baseUri);
+        final withbase = parsed.resolveWithBase(base: widget.baseUri);
 
         if (url != withbase.toString()) {
           return ThumbnailWidget(
@@ -336,13 +386,13 @@ MarkdownConfig markdownBrowserConfig(BuildContext context, BrowserPage page) {
           Uri uri = Uri.parse(url);
 
           if (uri.host.isEmpty) {
-            uri = resolveWithPageUri(uri, page.sourceUri);
+            uri = uri.resolveWithBase(base: page.sourceUri);
           }
 
           Provider.of<TabProvider>(
             context,
             listen: false,
-          ).navigateWithHistory(uri.toString());
+          ).loadTab(uri.toString());
         },
       ),
     ],
@@ -369,7 +419,7 @@ Widget buildBody(CommentData data, BuildContext context, BrowserPage page) {
 class CarouselView extends StatefulWidget {
   const CarouselView({super.key, required this.children});
 
-  final List<Widget> children;
+  final List<Future<Widget>> children;
   @override
   State<CarouselView> createState() => _CarouselViewState();
 }
@@ -386,7 +436,15 @@ class _CarouselViewState extends State<CarouselView> {
         controller: controller,
         itemCount: widget.children.length,
         itemBuilder: (context, index) {
-          return widget.children[index];
+          return FutureBuilder(
+            future: widget.children[index],
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              return snapshot.data ?? Center(child: Icon(LucideIcons.imageOff));
+            },
+          );
         },
       ),
     );

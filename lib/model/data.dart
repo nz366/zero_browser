@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:zero_browser/model/forms.dart';
 
 export 'package:zero_browser/model/forms.dart';
@@ -123,7 +124,7 @@ class CommentData {
     return CommentData(
       id: json['id'],
       author: json['author'],
-      content: json['content'],
+      content: json['content'].toString().trimQuotes(),
       createdAt: DateTime.tryParse(json['created_at'] ?? ""),
       score: json['score'],
       replies: replyList,
@@ -153,7 +154,7 @@ sealed class Section {
     final data = json['data'];
 
     return switch (type) {
-      'markdown' => MarkdownSection(data as String),
+      'markdown' => MarkdownSection.fromJson(data),
       'comment_thread' => CommentThreadSection(
         (data as List).map((e) => CommentData.fromJson(e)).toList(),
       ),
@@ -178,6 +179,19 @@ class MarkdownSection extends Section {
 
   @override
   Map<String, dynamic> toJson() => {'type': 'markdown', 'data': "\"$data\""};
+
+  factory MarkdownSection.fromJson(dynamic data) {
+    return MarkdownSection(data.toString().trimQuotes());
+  }
+}
+
+extension _StringExtensions on String {
+  String trimQuotes() {
+    if (startsWith('"') && endsWith('"')) {
+      return substring(1, length - 1);
+    }
+    return this;
+  }
 }
 
 class CommentThreadSection extends Section {
@@ -307,6 +321,7 @@ class BrowserPage {
             FormSection s => s.toJson().toString(),
             MediaSection s => s.items.toString(),
             CenteredSection s => s.section.toJson().toString(),
+            BrowserWidget s => s.toJson().toString(),
           };
         })
         .join("\n");
@@ -379,24 +394,121 @@ class FormSection extends Section {
   }
 }
 
-class MediaSection extends Section {
-  final List<Uint8List> items;
+abstract class FileDataAbstract {
+  final String name;
+  final String? mimeType;
+  Future<Uint8List> Function([int? offset, int? length]) get getBytes;
 
-  MediaSection({required this.items});
+  FileDataAbstract({required this.name, this.mimeType});
+
+  Map<String, Object?> toJson() => {
+    "name": name,
+    "mimeType": mimeType,
+    "source": "unreachable",
+  };
+
+  factory FileDataAbstract.fromJson(Map<String, Object?> json) {
+    if (json['source'] == "unreachable") {
+      return UnreachablFile(
+        name: json["name"] as String,
+        mimeType: json["mimeType"] as String?,
+      );
+    }
+
+    try {
+      final bytes = Uint8List.fromList((json['bytes'] as List).cast<int>());
+
+      return PreLoadedFile(
+        bytes,
+        name: json['name'] as String,
+        mimeType: json['mimeType'] as String?,
+      );
+    } catch (e) {
+      throw UnsupportedError("Unsupported file type");
+    }
+  }
+}
+
+class UnreachablFile extends FileDataAbstract {
+  UnreachablFile({required super.name, super.mimeType});
+
+  @override
+  Future<Uint8List> Function([int? offset, int? length]) get getBytes =>
+      ([int? offset, int? length]) {
+        return Future.value(Uint8List(0));
+      };
+}
+
+class PreLoadedFile extends FileDataAbstract {
+  final Uint8List bytes;
+
+  PreLoadedFile(this.bytes, {required super.name, super.mimeType});
+
+  @override
+  Future<Uint8List> Function([int? offset, int? length]) get getBytes =>
+      ([int? offset, int? length]) {
+        offset = offset ?? 0;
+        length = length ?? bytes.length;
+        return Future.value(bytes.sublist(offset, offset + length));
+      };
+
+  @override
+  Map<String, Object?> toJson() => {
+    "name": name,
+    "mimeType": mimeType,
+    "source": "preload",
+    "bytes": bytes,
+  };
+
+  factory PreLoadedFile.fromJson(Map<String, Object?> json) {
+    final bytes = Uint8List.fromList((json['bytes'] as List).cast<int>());
+    return PreLoadedFile(
+      bytes,
+      name: json['name'] as String,
+      mimeType: json['mimeType'] as String?,
+    );
+  }
+}
+
+class MediaSection extends Section {
+  final List<FileDataAbstract> items;
+
+  bool downloadMode;
+
+  MediaSection({required this.items, this.downloadMode = false});
 
   @override
   Map<String, dynamic> toJson() {
     return {
       'type': 'media',
-      "data": {"items": items.map((e) => e.toList()).toList()},
+      'data': {
+        "downloadMode": downloadMode,
+        "items": items.map((e) => e.toJson()).toList(),
+      },
     };
   }
 
   factory MediaSection.fromJson(Map<String, dynamic> json) {
+    final items = (json["items"] as List).cast<Map<String, dynamic>>();
+
     return MediaSection(
-      items: (json['items'] as List)
-          .map((e) => Uint8List.fromList((e as List).cast<int>()))
+      downloadMode: json["downloadMode"] as bool? ?? true,
+      items: items
+          .map<FileDataAbstract>((e) => FileDataAbstract.fromJson(e))
           .toList(),
     );
+  }
+}
+
+class BrowserWidget extends Section {
+  final Widget widget;
+
+  BrowserWidget(this.widget);
+
+  @override
+  Map<String, dynamic> toJson() => {};
+
+  factory BrowserWidget.fromJson(Map<String, dynamic> json) {
+    return BrowserWidget(Center(child: Icon(LucideIcons.fileQuestion)));
   }
 }

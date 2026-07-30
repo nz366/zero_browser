@@ -1,9 +1,19 @@
+import 'package:drift/drift.dart';
 import 'package:zero_browser/client/client.dart';
 import 'package:zero_browser/client/internal/demo.dart';
 import 'package:zero_browser/database/database.dart';
-import 'package:zero_browser/model/data.dart';
+import 'package:zero_browser/model/model.dart';
+import 'package:zero_browser/utils/utils.dart';
 
-class BrowserRequest extends RequestTransformer {
+class BrowserPageProfile implements RequestProfile {
+  @override
+  RequestProfile copyWith({getContent}) {
+    return this;
+  }
+
+  @override
+  Future<Structure> Function(Client client, String path) get getContent =>
+      getContentstatic;
   static const String _newTabMarkdown = '''
 # Testing Sites
 - [Wikipedia](https://en.wikipedia.org)
@@ -13,36 +23,30 @@ class BrowserRequest extends RequestTransformer {
 - [Instagram](https://www.instagram.com)
 - [Github](https://github.com)
 - [Codeberg](https://codeberg.org)
-- [Cloudflare Blogs](https://blog.cloudflare.com/markdown-for-agents/)
+- [Cloudflare Blogs](https://blog.cloudflare.com)
 
 
 # Other
-- [Demo](browser:demo)
+- [Demo](browser://demo)
 
 ''';
 
-  BrowserRequest({Uri? uri})
-    : super(uri: uri ?? Uri.parse("browser:newtab"), host: ["*"]);
-
-  @override
-  RequestTransformer withUri(Uri uri) => BrowserRequest(uri: uri);
-
-  @override
-  Future<DataResponse> getData() async {
-    switch (uri.path) {
+  Future<Structure> getContentstatic(Client client, String path) async {
+    final uri = Uri.parse(path);
+    switch (uri.authority) {
       case "newtab":
-        return DataResponse(
+        return Structure(
           body: [MarkdownSection(_newTabMarkdown)],
           statusCode: 200,
           title: "New Tab",
         );
       case 'demo':
-        return DataResponse(body: demopage(), statusCode: 200, title: "Demo");
+        return Structure(body: demopage(), statusCode: 200, title: "Demo");
       case "settings":
         if (uri.hasQuery) {
           // TODO: Form Submission System
         }
-        return DataResponse(
+        return Structure(
           body: [
             MarkdownSection("Settings....  (WIP)"),
             FormSection(
@@ -75,7 +79,7 @@ class BrowserRequest extends RequestTransformer {
             )
             .toList();
 
-        return DataResponse(
+        return Structure(
           body: [
             MarkdownSection("# Bookmarks"),
             TableSection(items: items),
@@ -83,9 +87,47 @@ class BrowserRequest extends RequestTransformer {
           statusCode: 200,
           title: "Bookmarks",
         );
+      case "history":
+        final visited = appDatabase.alias(appDatabase.urls, 'visited');
 
+        final query =
+            appDatabase.select(appDatabase.history).join([
+              innerJoin(
+                visited,
+                visited.id.equalsExp(appDatabase.history.urlId),
+              ),
+            ])..orderBy([
+              OrderingTerm(
+                expression: appDatabase.history.createdAt,
+                mode: OrderingMode.desc,
+              ),
+            ]);
+
+        final rows = await query.get();
+
+        final List<Map<String, String>> items = [
+          for (final row in rows)
+            {
+              "Title":
+                  row.readTable(visited).title ?? row.readTable(visited).url,
+              "Url": row.readTable(visited).url,
+              "Time": row
+                  .readTable(appDatabase.history)
+                  .createdAt
+                  .toRelativeTime(DateTime.now()),
+            },
+        ];
+
+        return Structure(
+          body: [
+            MarkdownSection("# History"),
+            TableSection(items: items),
+          ],
+          statusCode: 200,
+          title: "History",
+        );
       default:
-        return DataResponse(
+        return Structure(
           body: [MarkdownSection("Not Found \n ${uri.toString()}")],
           statusCode: 500,
           title: "Not Found",

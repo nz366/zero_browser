@@ -1,36 +1,32 @@
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:html2md/html2md.dart' as html2md;
-import 'package:http/http.dart' as http;
 import 'package:zero_browser/client/client.dart';
-import 'package:zero_browser/client/hosts/basichtml.dart'
-    show htmlDocumentTitle;
-import 'package:zero_browser/model/data.dart';
+import 'package:zero_browser/client/hosts/basichtml.dart';
+import 'package:zero_browser/model/model.dart';
 
-class BlueBirdRequest extends RequestTransformer {
-  BlueBirdRequest({Uri? uri})
-    : super(host: ["xcancel.com", "twitter.com", "x.com"], uri: uri ?? Uri());
+class BlueBirdSite implements SiteProfile {
+  @override
+  List<String> get domains => ["xcancel.com", "twitter.com", "x.com"];
 
   @override
-  RequestTransformer withUri(Uri uri) => BlueBirdRequest(uri: uri);
+  RequestProfile get request => RequestProfile(
+    getContent: (Client client, String path) async {
+      final uri = Uri.parse(path).replace(host: domains.first);
 
-  @override
-  Future<DataResponse> getData() async {
-    final uri = replace_with_fallback(host.first, super.uri);
+      final response = await client.httpUriRequest(uri, throwError: false);
+      final document = parse(response.body);
+      final title = htmlDocumentTitle(document);
 
-    final response = await http.get(uri);
-    final document = parse(response.body);
-    final title = htmlDocumentTitle(document);
+      final replies = read_replies(document);
 
-    final replies = read_replies(document);
-
-    return DataResponse(
-      title: title ?? uri.toString(),
-      body: [CommentThreadSection(replies)],
-      statusCode: 200,
-      sourceUri: uri,
-    );
-  }
+      return Structure(
+        title: title ?? uri.toString(),
+        body: [CommentThreadSection(replies)],
+        statusCode: 200,
+      );
+    },
+  );
 }
 
 List<Section> read_post(Document document) {
@@ -63,8 +59,4 @@ List<CommentData> read_replies(Document document) {
       ),
     );
   }).toList();
-}
-
-Uri replace_with_fallback(String host, Uri uri) {
-  return Uri.https(host, uri.path);
 }

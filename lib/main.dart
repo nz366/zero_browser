@@ -1,32 +1,23 @@
 import 'package:provider/provider.dart';
-import 'package:syntax_highlight/syntax_highlight.dart';
-import 'package:zero_browser/client/client.dart';
-import 'package:zero_browser/client/hosts/bluebird.dart';
-import 'package:zero_browser/client/hosts/github.dart';
-import 'package:zero_browser/client/hosts/galleries.dart';
-import 'package:zero_browser/client/hosts/hackernews.dart';
-import 'package:zero_browser/client/hosts/markdown.dart';
-import 'package:zero_browser/client/hosts/redlib.dart';
-import 'package:zero_browser/client/hosts/wikimedia.dart';
+import 'package:zero_browser/client/collection.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:zero_browser/ui/tab.dart';
 import 'package:zero_browser/providers/theme_provider.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:zero_browser/database/database.dart';
 import 'package:zero_browser/providers/bookmark_provider.dart';
+import 'package:zero_browser/widgets/browser/errors.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  RequesterRegistry.register(HackernewsRequest());
-  RequesterRegistry.register(MarkdownRequest());
-  RequesterRegistry.register(RedlibRequest());
-  RequesterRegistry.register(Mediawiki());
-  RequesterRegistry.register(GiteaRequest());
-  RequesterRegistry.register(GramRequest());
-  RequesterRegistry.register(GurRequest());
-  RequesterRegistry.register(BlueBirdRequest());
-  await Highlighter.initialize(['dart']);
+  registerDefaults();
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return BrowserError(
+      heading: "This widget caused an error",
+      error: details.exception.toString(),
+    );
+  };
 
   runApp(
     MultiProvider(
@@ -51,7 +42,6 @@ class BroswserApp extends StatelessWidget {
       themeMode: themeProvider.themeMode,
       theme: themeProvider.lightTheme,
       darkTheme: themeProvider.darkTheme,
-      debugShowCheckedModeBanner: false,
       home: Scaffold(child: TabPaneWidget()),
     );
   }

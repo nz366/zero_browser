@@ -7,6 +7,12 @@ import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
 part 'database.g.dart';
 
+class Urls extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get url => text().unique()();
+  TextColumn get title => text().nullable()();
+}
+
 class Bookmarks extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get url => text()();
@@ -16,9 +22,10 @@ class Bookmarks extends Table {
 
 class History extends Table {
   IntColumn get id => integer().autoIncrement()();
-  TextColumn get url => text()();
-  TextColumn get title => text().nullable()();
-  IntColumn get stemfrom => integer().nullable()();
+  IntColumn get urlId =>
+      integer().references(Urls, #id, onDelete: KeyAction.cascade)();
+  IntColumn get visitFrom => integer().nullable().references(Urls, #id)();
+  IntColumn get eventType => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
@@ -56,8 +63,9 @@ final appDatabase = AppDatabase();
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'zero_browser_unstable_db.sqlite'));
-
+    final file = File(
+      p.join(dbFolder.path, ".zero_browser", 'data_unstable.sqlite'),
+    );
     final cachebase = (await getTemporaryDirectory()).path;
     sqlite3.tempDirectory = cachebase;
 
