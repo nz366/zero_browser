@@ -1,0 +1,8 @@
+[
+  {
+    "label": "Launch Dart App",
+    "adapter": "Dart",
+    "request": "launch",
+    "type": "flutter"
+  }
+]
