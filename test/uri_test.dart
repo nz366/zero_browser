@@ -32,4 +32,15 @@ void main() {
       expect(u.toString(), "https://example.com/path/to");
     });
   });
+
+  test("Base uri", () {
+    [
+      "https://example.com/a/x/c",
+      "https://example.com/a/x/c?a=c",
+      "https://example.com/a/x/c?a=c&x=c",
+    ].forEach((url) {
+      final uri = Uri.parse(url);
+      expect(uri.baseUri.toString(), "https://example.com");
+    });
+  });
 }

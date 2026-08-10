@@ -68,6 +68,11 @@ extension UriUtils on Uri {
 
     return this;
   }
+
+  // https://example.com/path/to/file.html -> https://example.com
+  Uri get baseUri {
+    return Uri(scheme: scheme, host: host, port: hasPort ? port : null);
+  }
 }
 
 const String kWildcard = '*';
