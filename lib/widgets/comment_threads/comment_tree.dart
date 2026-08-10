@@ -83,7 +83,7 @@ class _CommentTreeState extends State<CommentTree> {
                         bottom: padding10,
                         // horizontal: padding10,
                       ),
-                      child: buildContent(widget.comment),
+                      child: widget.buildBody(widget.comment),
                     ),
 
                     if (widget.comment.replies.isNotEmpty &&
@@ -209,13 +209,6 @@ Padding buildEnd(CommentData parent, VoidCallback onUpdated) {
       },
       child: Text(parent.collapsed ? "More" : "Less"),
     ),
-  );
-}
-
-Column buildContent(CommentData data) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [Text(data.content, style: const TextStyle(fontSize: 14))],
   );
 }
 

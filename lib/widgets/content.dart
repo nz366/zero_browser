@@ -379,12 +379,9 @@ Widget buildMiniMarkDown(String data, BuildContext context, BrowserPage page) {
 }
 
 Widget buildBody(CommentData data, BuildContext context, BrowserPage page) {
-  return ConstrainedBox(
-    constraints: BoxConstraints(maxHeight: 300),
-    child: MarkdownBlock(
-      data: data.content,
-      config: markdownBrowserConfig(context, page),
-    ),
+  return MarkdownBlock(
+    data: data.content,
+    config: markdownBrowserConfig(context, page),
   );
 }
 
