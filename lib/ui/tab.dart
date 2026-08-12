@@ -71,7 +71,7 @@ class TabPaneWidget extends StatelessWidget {
                           shape: ButtonShape.circle,
                           size: ButtonSize.xSmall,
                           icon: const Icon(Icons.close),
-                          onPressed: () => provider.removeTab(data),
+                          onPressed: () => provider.closeTab(data),
                         ),
                   child: Text(data.page.title.split("://").last),
                 ),

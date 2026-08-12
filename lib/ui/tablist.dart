@@ -47,7 +47,7 @@ class _SearchTabsWidgetState extends State<SearchTabsWidget> {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.accent.withOpacity(.2),
+            color: Theme.of(context).colorScheme.accent.withValues(alpha: .2),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -111,7 +111,7 @@ class _SearchTabsWidgetState extends State<SearchTabsWidget> {
                   : ListView.separated(
                       shrinkWrap: true,
                       itemCount: filteredTabs.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      separatorBuilder: (_, _) => const Divider(height: 1),
                       itemBuilder: (context, index) {
                         final tab = filteredTabs[index];
                         final uri = Uri.tryParse(tab.data.page.url);

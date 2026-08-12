@@ -23,7 +23,7 @@ class HtmlProfile implements RequestProfile {
   Future<Structure> Function(Client client, String path) get getContent =>
       getContentstatic;
 
-  Future<Structure> getContentstatic(Client client, String path) async {
+  static Future<Structure> getContentstatic(Client client, String path) async {
     final response = await client.httpRequest(path);
 
     final contentType = ContentType.parse(

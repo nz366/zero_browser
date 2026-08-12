@@ -16,22 +16,23 @@ String cleanUri(Uri uri) {
   return uri.toString();
 }
 
-Uri resolveWithPageUri(Uri child, Uri? parent) {
-  if (parent == null) return child;
-  if (child.host.isEmpty) {
-    return Uri.parse(
-      "${parent.scheme}:${parent.host}${child.path.startsWith("/") ? "" : "/"}${child.path}",
-    );
+extension UriUtils on Uri {
+  Uri insertOrIgnore({required String newScheme}) {
+    if (scheme.isEmpty) {
+      return Uri.parse("$newScheme${toString()}");
+    }
+    return this;
   }
 
-  return child;
-}
-
-extension UriUtils on Uri {
-  Uri insertOrIgnore({required String sceheme}) {
-    if (scheme.isEmpty) {
-      return replace(scheme: sceheme);
+  Uri resolveWithBase({required Uri? base}) {
+    if (base == null) return this;
+    if (host.isEmpty) {
+      final newScheme = base.scheme.isEmpty ? "https" : base.scheme;
+      return Uri.parse(
+        "${base.host}${path.startsWith("/") ? "" : "/"}${path}",
+      ).insertOrIgnore(newScheme: "$newScheme://");
     }
+
     return this;
   }
 }

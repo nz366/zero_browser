@@ -22,7 +22,7 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
     if (bytes <= 0) return "0 B";
     const suffixes = ["B", "KB", "MB", "GB", "TB"];
     var i = (log(bytes) / log(1024)).floor();
-    return ((bytes / pow(1024, i)).toStringAsFixed(1)) + ' ' + suffixes[i];
+    return '${(bytes / pow(1024, i)).toStringAsFixed(1)} ${suffixes[i]}';
   }
 
   String? _getFileSizeText(String? path) {
@@ -238,7 +238,7 @@ class FileDownloadWidget extends StatelessWidget {
             decoration: decoration,
             child: ListView.separated(
               shrinkWrap: true,
-              separatorBuilder: (_, __) => Divider(),
+              separatorBuilder: (_, _) => Divider(),
               itemCount: section.items.length,
               itemBuilder: (context, index) {
                 final item = section.items[index];
