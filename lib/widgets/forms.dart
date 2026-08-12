@@ -1,6 +1,6 @@
 import 'package:provider/provider.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
-import 'package:zero_browser/model/data.dart' as forms;
+import 'package:zero_browser/model/model.dart' as forms;
 import 'package:zero_browser/providers/history_provider.dart';
 import 'package:zero_browser/widgets/fields/file.dart';
 

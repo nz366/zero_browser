@@ -10,7 +10,10 @@ class MediaWikiSite implements SiteProfile {
   RequestProfile get request => RequestProfile(
     getContent: (Client client, String path) async {
       final response = await client.httpRequest(path);
-      return defaultHtmlString(response.body, "MediaWiki");
+      return defaultHtmlString(
+        response.body,
+        response.copyWith(title: "MediaWiki"),
+      );
     },
   );
 }

@@ -7,6 +7,7 @@ import 'package:html/parser.dart' as html;
 import 'package:html2md/html2md.dart' as html2md;
 import 'package:zero_browser/client/client.dart';
 import 'package:zero_browser/model/model.dart';
+import 'package:zero_browser/utils/utils.dart';
 
 String? htmlDocumentTitle(Document document) {
   return document.querySelector("title")?.text ??
@@ -32,7 +33,7 @@ class HtmlProfile implements RequestProfile {
 
     switch (contentType.mimeType) {
       case "text/html":
-        return defaultHtmlString(response.body, path);
+        return defaultHtmlString(response.body, response);
       case "image/jpeg":
       case "image/png":
       case "image/webp":
@@ -83,16 +84,19 @@ class FileProfile implements RequestProfile {
 
   static Future<Structure> getContentstatic(Client client, String path) async {
     final response = await client.localRequest(path);
-    return defaultHtmlString(response.body, path);
+    return defaultHtmlString(response.body, response);
   }
 }
 
-Future<Structure> defaultHtmlString(String data, String fallbackTitle) async {
+Future<Structure> defaultHtmlString(
+  String data,
+  ResponseDetails responseDetails,
+) async {
   final document = await compute(html.parse, data);
-  return defaultHtml(document, fallbackTitle);
+  return defaultHtml(document, responseDetails);
 }
 
-Structure defaultHtml(html.Document document, String fallbackTitle) {
+Structure defaultHtml(html.Document document, ResponseDetails responseDetails) {
   final title = htmlDocumentTitle(document);
   document.querySelectorAll('style').forEach((element) => element.remove());
   document.querySelectorAll('script').forEach((element) => element.remove());
@@ -102,8 +106,10 @@ Structure defaultHtml(html.Document document, String fallbackTitle) {
   final content = html2md.convert(body.first.innerHtml);
 
   return Structure(
-    body: [MarkdownSection(content)],
+    body: [
+      MarkdownSection(content, baseUri: responseDetails.uri.baseUri.toString()),
+    ],
     statusCode: 200,
-    title: title ?? fallbackTitle,
+    title: title ?? responseDetails.defaultTitle,
   );
 }

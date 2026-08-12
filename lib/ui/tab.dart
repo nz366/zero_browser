@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'package:flutter/services.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart'
     hide TabPane, TabPaneData, InteractiveViewer;
 import 'package:provider/provider.dart';
@@ -12,6 +10,7 @@ import 'package:zero_browser/ui/tabpane.dart';
 import 'package:zero_browser/widgets/content.dart';
 import 'package:zero_browser/providers/bookmark_provider.dart';
 import 'package:zero_browser/widgets/density.dart';
+import 'package:zero_browser/widgets/devtools.dart';
 import 'package:zero_browser/widgets/vendor/interactiveviewer.dart';
 
 class TabPaneWidget extends StatelessWidget {
@@ -96,7 +95,6 @@ class TabPaneWidget extends StatelessWidget {
       ],
       trailing: [],
 
-      // Content Area
       child: Column(
         children: [
           Container(
@@ -130,7 +128,6 @@ class TabPaneWidget extends StatelessWidget {
 
                 Spacer(),
 
-                // IconButton.ghost(icon: Icon(Icons.share), onPressed: () {}),
                 Expanded(
                   flex: 3,
                   child: DowngradeDensity(
@@ -216,9 +213,10 @@ class TabPaneWidget extends StatelessWidget {
                         Expanded(child: ContentArea()),
                         if (provider.focusedTab.sidebarOpen)
                           Flexible(flex: 0, child: VerticalDivider()),
-
                         if (provider.focusedTab.sidebarOpen)
-                          buildSource(provider, tabs, focused),
+                          Expanded(
+                            child: buildRightPanel(provider, tabs, focused),
+                          ),
                       ],
                     ),
             ),
@@ -244,59 +242,12 @@ class TabPaneWidget extends StatelessWidget {
     );
   }
 
-  Expanded buildSource(
+  Widget buildRightPanel(
     TabProvider provider,
     List<TabPaneData<TabData>> tabs,
     int focused,
   ) {
-    return Expanded(
-      child: Card(
-        child: Builder(
-          builder: (context) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Row(
-                  children: [
-                    Spacer(),
-                    IconButton.ghost(
-                      icon: Icon(Icons.file_copy_outlined),
-                      onPressed: () async {
-                        final data = JsonEncoder.withIndent(
-                          '  ',
-                        ).convert(tabs[focused].data.page.toJson());
-                        await Clipboard.setData(ClipboardData(text: data));
-
-                        showToast(
-                          context: context,
-                          builder: buildToast,
-                          location: ToastLocation.topRight,
-                        );
-                      },
-                    ),
-
-                    IconButton.ghost(
-                      icon: Icon(Icons.close),
-                      onPressed: () {
-                        provider.toggleTabSidebar();
-                      },
-                    ),
-                  ],
-                ),
-
-                Gap(10),
-
-                Expanded(child: SourcePanel()),
-              ],
-            );
-          },
-        ),
-      ),
-
-      // child: Text(
-      //   provider.focusedTab.page.toString(),
-      // ),
-    );
+    return DevToolPanel();
   }
 }
 

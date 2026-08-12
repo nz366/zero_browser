@@ -1,9 +1,6 @@
-import 'dart:typed_data';
-
 import 'package:shadcn_flutter/shadcn_flutter.dart';
-import 'package:zero_browser/model/forms.dart';
-
-export 'package:zero_browser/model/forms.dart';
+import 'package:zero_browser/model/model.dart';
+import 'package:zero_browser/utils/utils.dart';
 
 class PostData extends CommentData {
   final String title;
@@ -175,22 +172,18 @@ sealed class Section {
 
 class MarkdownSection extends Section {
   final String data;
-  const MarkdownSection(this.data);
+  final String baseUri;
+  const MarkdownSection(this.data, {this.baseUri = ""});
 
   @override
-  Map<String, dynamic> toJson() => {'type': 'markdown', 'data': "\"$data\""};
+  Map<String, dynamic> toJson() => {
+    'type': 'markdown',
+    'base': baseUri,
+    'data': data.wrapQuostes(),
+  };
 
   factory MarkdownSection.fromJson(dynamic data) {
     return MarkdownSection(data.toString().trimQuotes());
-  }
-}
-
-extension _StringExtensions on String {
-  String trimQuotes() {
-    if (startsWith('"') && endsWith('"')) {
-      return substring(1, length - 1);
-    }
-    return this;
   }
 }
 
@@ -279,15 +272,15 @@ enum LayoutConfig { table, list, grid, masonry }
 class BrowserPage {
   String url;
   String title;
-  Uri? sourceUri;
+  Uri sourceUri;
   List<Section> content;
 
   BrowserPage({
     required this.url,
     required this.title,
     required this.content,
-    this.sourceUri,
-  });
+    Uri? sourceUri,
+  }) : sourceUri = sourceUri ?? Uri.parse(url).baseUri;
 
   factory BrowserPage.fromJson(Map<String, dynamic> json) {
     return BrowserPage(
@@ -296,6 +289,7 @@ class BrowserPage {
       content: (json['content'] as List? ?? [])
           .map((e) => Section.fromJson(e as Map<String, dynamic>))
           .toList(),
+      sourceUri: Uri.parse(json['sourceUri'] ?? "file://unreachable"),
     );
   }
 
@@ -304,6 +298,7 @@ class BrowserPage {
       'url': url,
       'title': title,
       'content': content.map((e) => e.toJson()).toList(),
+      'sourceUri': sourceUri.toString(),
     };
   }
 

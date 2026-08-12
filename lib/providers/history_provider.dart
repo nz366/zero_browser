@@ -3,6 +3,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart'
     hide TabPaneData, TransformationController;
 import 'package:uuid/uuid.dart';
 import 'package:zero_browser/client/client.dart';
+import 'package:zero_browser/client/event_recorder_client.dart';
 import 'package:zero_browser/database/database.dart';
 import 'package:zero_browser/ui/tabpane.dart';
 import 'package:zero_browser/model/model.dart';
@@ -24,6 +25,8 @@ class TabData {
   bool isWideMode = false;
 
   bool sidebarOpen = false;
+
+  bool showNetWorkTab = false;
 
   final TransformationController zoomTransformationController;
   final ScrollController scrollController;
@@ -102,7 +105,6 @@ class TabProvider extends ChangeNotifier {
     focusedTab.forward(onUrlChange: loadTab);
   }
 
-  Client client = Client();
   List<TabPaneData<TabData>> _tabs = [];
   int _focused = 0;
 
@@ -127,7 +129,6 @@ class TabProvider extends ChangeNotifier {
 
   void closeTab(TabData data) {
     _tabs.removeWhere((element) => element.data.id == data.id);
-    // Ensure focused index stays within bounds
     if (_focused >= _tabs.length && _tabs.isNotEmpty) {
       _focused = _tabs.length - 1;
     }
@@ -145,6 +146,11 @@ class TabProvider extends ChangeNotifier {
 
   void loadTab([String? url]) async {
     final targetTab = _tabs[focused].data;
+
+    if (targetTab.showNetWorkTab) {
+      targetTab.client = EventRecordingClient();
+    }
+
     if (url != null) {
       targetTab.visit(url);
     }
@@ -293,6 +299,11 @@ class TabProvider extends ChangeNotifier {
   }
 
   void openTab(String tab) {}
+
+  void enableClientEvent() {
+    _tabs[_focused].data.client = EventRecordingClient();
+    notifyListeners();
+  }
 }
 
 Uri newFormUri(Uri uri, FormSection form) {

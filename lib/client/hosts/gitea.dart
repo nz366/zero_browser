@@ -89,7 +89,10 @@ class GitlabSite implements SiteProfile {
   RequestProfile get request => RequestProfile(
     getContent: (Client client, String path) async {
       final response = await client.httpRequest(path);
-      return defaultHtmlString(response.body, "Gitlab");
+      return defaultHtmlString(
+        response.body,
+        response.copyWith(title: "Gitlab"),
+      );
     },
   );
 }
@@ -106,7 +109,10 @@ class GiteaSite implements SiteProfile {
   RequestProfile get request => RequestProfile(
     getContent: (Client client, String path) async {
       final response = await client.httpRequest(path);
-      return defaultHtmlString(response.body, "Gitlab");
+      return defaultHtmlString(
+        response.body,
+        response.copyWith(title: "Gitlab"),
+      );
     },
   );
 }

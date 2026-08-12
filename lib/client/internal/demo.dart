@@ -1,6 +1,4 @@
-import 'dart:typed_data';
-
-import 'package:zero_browser/model/data.dart';
+import 'package:zero_browser/model/model.dart';
 
 List<Section> demopage() => [
   MarkdownSection("""# This is a demo page

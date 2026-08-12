@@ -16,33 +16,51 @@ class RedditSite implements SiteProfile {
       final response = await client.httpRequest(path, throwError: true);
       final parsedhtml = await compute(html.parse, response.body);
       if (uri.pathSegments.isEmpty) {
-        return homepage(parsedhtml);
+        return homepage(parsedhtml, response);
       } else if (uri.pathSegments[0] == 'r') {
         if (uri.pathSegments[2] == 'comments') {
-          return postthread(parsedhtml);
+          return postthread(
+            parsedhtml,
+            response.copyWith(title: "Reddit Post"),
+          );
         } else {
-          return subredditPage(parsedhtml);
+          return subredditPage(
+            parsedhtml,
+            response.copyWith(title: "Reddit Subreddit"),
+          );
         }
       } else if (uri.pathSegments[0] == 'user' || uri.pathSegments[0] == 'u') {
-        return userpage(parsedhtml);
+        return userpage(parsedhtml, response.copyWith(title: "Reddit User"));
       }
-      return defaultHtml(parsedhtml, "Reddit Page");
+      return defaultHtml(parsedhtml, response.copyWith(title: "Reddit Page"));
     },
   );
 }
 
-Future<Structure> subredditPage(html.Document parsedhtml) async {
-  return defaultHtml(parsedhtml, "Subreddits");
+Future<Structure> subredditPage(
+  html.Document parsedhtml,
+  ResponseDetails response,
+) async {
+  return defaultHtml(parsedhtml, response.copyWith(title: "Subreddits"));
 }
 
-Future<Structure> homepage(html.Document parsedhtml) async {
-  return defaultHtml(parsedhtml, "Home | reddit.com");
+Future<Structure> homepage(
+  html.Document parsedhtml,
+  ResponseDetails response,
+) async {
+  return defaultHtml(parsedhtml, response.copyWith(title: "Home | reddit.com"));
 }
 
-Future<Structure> userpage(html.Document parsedhtml) async {
-  return defaultHtml(parsedhtml, "User | reddit.com");
+Future<Structure> userpage(
+  html.Document parsedhtml,
+  ResponseDetails response,
+) async {
+  return defaultHtml(parsedhtml, response.copyWith(title: "User | reddit.com"));
 }
 
-Future<Structure> postthread(html.Document parsedhtml) async {
-  return defaultHtml(parsedhtml, "Post | reddit.com");
+Future<Structure> postthread(
+  html.Document parsedhtml,
+  ResponseDetails response,
+) async {
+  return defaultHtml(parsedhtml, response.copyWith(title: "Post | reddit.com"));
 }

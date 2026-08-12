@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
-import 'package:zero_browser/model/data.dart' as forms;
+import 'package:zero_browser/model/model.dart' as forms;
 import 'package:file_picker/file_picker.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 
