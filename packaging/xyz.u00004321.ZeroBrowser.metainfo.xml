@@ -11,9 +11,13 @@
 
   <description>
     <p>
-      Zero Browser is a minimal, fast web browser built with Flutter for Linux.
-      It provides a clean browsing experience with tab management, history tracking,
-      and bookmark support.
+      Zero Browser is a minimal data-driven web browser.
+      It simplifies web browsing by focusing on data-driven interchange and eliminating
+      complexity of traditional HTML/CSS/JS-based systems.
+    </p>
+    <p>
+      Features include tab management, history tracking, bookmark support, and rich text
+      rendering with markdown, comments, tables, lists, and grids.
     </p>
   </description>
 
@@ -22,18 +26,20 @@
     <category>WebBrowser</category>
   </categories>
 
-  <url type="homepage">https://github.com/nz/zero_browser</url>
-  <url type="bugtracker">https://github.com/nz/zero_browser/issues</url>
-  <url type="vcs-browser">https://github.com/nz/zero_browser</url>
+  <url type="homepage">https://github.com/nz366/zero_browser</url>
+  <url type="bugtracker">https://github.com/nz366/zero_browser/issues</url>
+  <url type="vcs-browser">https://github.com/nz366/zero_browser</url>
 
   <provides>
     <binary>zero_browser</binary>
   </provides>
 
+  <update_contact>support@example.com</update_contact>
+
   <releases>
     <release version="0.0.1" date="2026-04-05">
       <description>
-        <p>Initial release with tab management and bookmark support.</p>
+        <p>Initial release featuring tab management, history tracking, bookmark support, and rich markdown rendering with comments, tables, and data-driven content display.</p>
       </description>
     </release>
   </releases>
@@ -45,7 +51,7 @@
   <screenshots>
     <screenshot type="default">
       <caption>Zero Browser main window</caption>
-      <image>https://raw.githubusercontent.com/nz/zero_browser/main/packaging/screenshots/screenshot.png</image>
+      <image>https://raw.githubusercontent.com/nz366/zero_browser/main/packaging/screenshots/screenshot.png</image>
     </screenshot>
   </screenshots>
 </component>

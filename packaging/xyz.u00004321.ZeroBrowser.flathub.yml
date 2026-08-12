@@ -25,7 +25,7 @@ modules:
       # This points to the GitHub release asset. 
       # Flathub builds will wait for this to exist.
       - type: archive
-        url: https://github.com/nz/zero_browser/releases/download/v0.0.1/ZeroBrowser-linux-x64.tar.gz
+        url: https://github.com/nz366/zero_browser/releases/download/v0.0.1/ZeroBrowser-linux-x64.tar.gz
         sha256: 0000000000000000000000000000000000000000000000000000000000000000 # Placeholder: must be updated per release
         dest: bundle
 

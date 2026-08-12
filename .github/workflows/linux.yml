@@ -2,8 +2,6 @@ name: Release
 permissions:
   contents: write
   actions: write
-# Trigger on version tags — e.g. git tag v1.2.3 && git push --tags
-# Also trigger on every push to `develop` to cut an automatic pre-release
 on:
   push:
     tags:
@@ -60,6 +58,9 @@ jobs:
       - name: Get Flutter dependencies
         run: flutter pub get
 
+      - name: Flutter Test
+        run: flutter test
+        
       - name: Build Flutter Linux release
         run: flutter build linux --release
 

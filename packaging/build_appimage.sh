@@ -87,12 +87,13 @@ fi
 echo "==> Running appimagetool..."
 # Use FUSE if available, otherwise extract+run (works in containers/CI)
 if command -v fusermount &>/dev/null || command -v fusermount3 &>/dev/null; then
-    "$APPIMAGETOOL" "$APPDIR" "$OUTPUT"
+    "$APPIMAGETOOL" -u "zsync|https://github.com/nz/zero_browser/releases/download/latest/ZeroBrowser-x86_64.AppImage.zsync" "$APPDIR" "$OUTPUT"
 else
     echo "    (FUSE not available, using --appimage-extract-and-run)"
-    APPIMAGE_EXTRACT_AND_RUN=1 "$APPIMAGETOOL" "$APPDIR" "$OUTPUT"
+    APPIMAGE_EXTRACT_AND_RUN=1 "$APPIMAGETOOL" -u "zsync|https://github.com/nz/zero_browser/releases/download/latest/ZeroBrowser-x86_64.AppImage.zsync" "$APPDIR" "$OUTPUT"
 fi
 
 echo ""
 echo "✅ AppImage built successfully: $OUTPUT"
+echo "   Zsync file: ${OUTPUT}.zsync"
 echo "   Run with: $OUTPUT"

@@ -2,7 +2,7 @@
 Version=1.0
 Type=Application
 Name=Zero Browser
-Comment=A minimal, fast browser built with Flutter
+Comment= "Data-driven web browser."=
 Exec=zero_browser
 Icon=xyz.u00004321.ZeroBrowser
 Categories=Network;WebBrowser;
