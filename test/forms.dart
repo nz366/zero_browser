@@ -1,4 +1,4 @@
-import 'package:zero_browser/model/data.dart';
+import 'package:zero_browser/model/model.dart';
 import 'package:zero_browser/providers/history_provider.dart';
 
 void main() {

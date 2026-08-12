@@ -22,32 +22,30 @@ extension UriUtils on Uri {
     String? defaultScheme,
     List<String>? defaultHostSegments,
   }) {
-    String scheme;
-    String host;
-    String path;
+    final scheme = defaultScheme ?? 'https';
+    final defaultHost = defaultHostSegments?.join('.') ?? '';
 
-    final parts = data.split("://");
+    var value = data.trim();
 
-    if (parts.length == 2) {
-      scheme = parts.first;
-    } else {
-      scheme = defaultScheme ?? "https";
+    // Remove an invalid/empty scheme.
+    if (value.startsWith('://')) {
+      value = value.substring(3);
     }
 
-    final part = parts.last;
+    // Remove leading "//" or "/" so we can rebuild the URI consistently.
+    value = value.replaceFirst(RegExp(r'^/+'), '');
 
-    final segments = part
-        .split("//")
-        .join("/")
-        .split("/")
-        .where((element) => element.isNotEmpty)
-        .toList();
+    final parts = value.split('/');
+    final first = parts.first;
+    final rest = parts.skip(1).join('/');
 
-    host = segments.firstOrNull ?? "";
+    // A host is present if the first segment looks like a hostname.
+    final hasHost = first.contains('.') || first == 'localhost';
 
-    path = segments.skip(1).join('/');
+    final host = hasHost ? first : defaultHost;
+    final path = hasHost ? rest : value;
 
-    return Uri(scheme: scheme, host: host, path: path);
+    return Uri.parse('$scheme://$host${path.isEmpty ? '' : '/$path'}');
   }
 
   Uri insertOrIgnore({required String newScheme}) {

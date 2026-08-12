@@ -22,7 +22,7 @@ class BookmarkProvider extends ChangeNotifier {
   }
 
   bool isBookmarked(String url) {
-    return _bookmarks.any((b) => b.url == url);
+    return _bookmarks.isNotEmpty && _bookmarks.any((b) => b.url == url);
   }
 
   Future<void> toggleBookmark(String url, {String? title}) async {

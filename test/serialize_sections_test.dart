@@ -1,6 +1,5 @@
-import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zero_browser/model/data.dart';
+import 'package:zero_browser/model/model.dart';
 
 void main() {
   group('Section Serialization', () {

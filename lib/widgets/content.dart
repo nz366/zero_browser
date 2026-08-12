@@ -11,7 +11,6 @@ import 'package:zero_browser/utils/uri.dart';
 import 'package:zero_browser/widgets/comment_threads/comment_tree.dart';
 import 'package:zero_browser/widgets/fields/file.dart';
 import 'package:zero_browser/widgets/forms.dart';
-export 'package:zero_browser/widgets/browser/networkTable.dart';
 
 class ContentView extends StatefulWidget {
   final BrowserPage page;
