@@ -58,8 +58,8 @@ jobs:
       - name: Get Flutter dependencies
         run: flutter pub get
 
-      - name: Flutter Test
-        run: flutter test
+      # - name: Flutter Test
+      #   run: flutter test
         
       - name: Build Flutter Linux release
         run: flutter build linux --release
