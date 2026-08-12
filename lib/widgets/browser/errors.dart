@@ -4,11 +4,13 @@ class BrowserError extends StatelessWidget {
   final String error;
   final Function()? onRetry;
   final String? heading;
+  final Widget? retryButton;
   const BrowserError({
     super.key,
     required this.error,
     this.onRetry,
     this.heading,
+    this.retryButton,
   });
   @override
   Widget build(BuildContext context) {
@@ -31,8 +33,13 @@ class BrowserError extends StatelessWidget {
               style: const TextStyle(color: Colors.gray, fontSize: 13),
             ),
             const SizedBox(height: 16),
-            if (onRetry != null)
-              Button.outline(onPressed: onRetry, child: const Text('Retry')),
+            retryButton ??
+                (onRetry != null
+                    ? Button.outline(
+                        onPressed: onRetry,
+                        child: const Text('Retry'),
+                      )
+                    : SizedBox.shrink()),
           ],
         ),
       ),
