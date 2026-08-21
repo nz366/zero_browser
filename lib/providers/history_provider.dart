@@ -56,11 +56,24 @@ class TabData {
   }) async {
     if (!url.startsWith("browser://")) {
       await appDatabase.transaction(() async {
+        final inserting = UrlsCompanion.insert(url: url, title: Value(title));
+
         final urlId = await appDatabase
             .into(appDatabase.urls)
             .insert(
-              UrlsCompanion.insert(url: url, title: Value(title)),
-              mode: InsertMode.insertOrIgnore,
+              inserting,
+              // update title if same url have different name
+              onConflict: title == null || title.isEmpty
+                  ? null
+                  : DoUpdate(
+                      (old) => UrlsCompanion.custom(
+                        title: Variable(inserting.title.value),
+                      ),
+                      target: [appDatabase.urls.url],
+                      where: (old) =>
+                          old.title.isNull() &
+                          old.title.isNotValue(inserting.title.value!),
+                    ),
             );
 
         await appDatabase
@@ -151,10 +164,6 @@ class TabProvider extends ChangeNotifier {
       targetTab.client = EventRecordingClient();
     }
 
-    if (url != null) {
-      targetTab.visit(url);
-    }
-
     url = url ?? _tabs[focused].data.page.url;
 
     if (url == "") return;
@@ -185,6 +194,7 @@ class TabProvider extends ChangeNotifier {
       ];
     } finally {
       targetTab.loading = false;
+      targetTab.visit(url, title: targetTab.page.title);
       notifyListeners();
     }
   }
