@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:zero_browser/client/client.dart';
 import 'package:zero_browser/client/internal/demo.dart';
 import 'package:zero_browser/database/database.dart';
@@ -43,9 +44,6 @@ class BrowserPageProfile implements RequestProfile {
       case 'demo':
         return Structure(body: demopage(), statusCode: 200, title: "Demo");
       case "settings":
-        if (uri.hasQuery) {
-          // TODO: Form Submission System
-        }
         return Structure(
           body: [
             MarkdownSection("Settings....  (WIP)"),
@@ -69,20 +67,17 @@ class BrowserPageProfile implements RequestProfile {
         final bookmarksList = await appDatabase
             .select(appDatabase.bookmarks)
             .get();
-        final items = bookmarksList
-            .map(
-              (b) => {
-                "title": b.title ?? b.url,
-                "url": b.url,
-                "time": b.createdAt.toIso8601String(),
-              },
-            )
-            .toList();
+
+        final columns = ["Title", "Url", "Time"];
+        final List<List<String>> rows = [
+          for (final item in bookmarksList)
+            [item.title ?? "", item.url, item.createdAt.toIso8601String()],
+        ];
 
         return Structure(
           body: [
             MarkdownSection("# Bookmarks"),
-            TableSection(items: items),
+            TableSection(columns: columns, rows: rows),
           ],
           statusCode: 200,
           title: "Bookmarks",
@@ -105,23 +100,24 @@ class BrowserPageProfile implements RequestProfile {
 
         final rows = await query.get();
 
-        final List<Map<String, String>> items = [
+        final columns = ["Title", "Url", "Time"];
+
+        final List<List<String>> items = [
           for (final row in rows)
-            {
-              "Title":
-                  row.readTable(visited).title ?? row.readTable(visited).url,
-              "Url": row.readTable(visited).url,
-              "Time": row
+            [
+              row.readTable(visited).title ?? row.readTable(visited).url,
+              row.readTable(visited).url,
+              row
                   .readTable(appDatabase.history)
                   .createdAt
                   .toRelativeTime(DateTime.now()),
-            },
+            ],
         ];
 
         return Structure(
           body: [
             MarkdownSection("# History"),
-            TableSection(items: items),
+            TableSection(columns: columns, rows: items),
           ],
           statusCode: 200,
           title: "History",

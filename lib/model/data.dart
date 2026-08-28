@@ -310,7 +310,7 @@ class BrowserPage {
             MarkdownSection s => s.data,
             CommentThreadSection s => s.data.map((e) => e.toJson()).join("\n"),
             ArticleListSection s => s.title,
-            TableSection s => s.items.toString(),
+            TableSection s => s.rows.toString(),
             ImageGridSection s => s.data.toString(),
             SettingsSliverSection s => s.data,
             FormSection s => s.toJson().toString(),
@@ -324,22 +324,30 @@ class BrowserPage {
 }
 
 class TableSection extends Section {
-  final List<dynamic> items;
+  final List<List<String>> rows;
+  final List<String> columns;
 
-  TableSection({required this.items});
+  TableSection({required this.rows, List<String>? columns})
+    : columns =
+          columns ??
+          List.generate(rows.firstOrNull?.length ?? 0, (i) => "Column $i");
 
-  List<String> get columns => items.firstOrNull?.keys.toList() ?? [];
   @override
   Map<String, dynamic> toJson() {
     return {
       "type": "table",
-      "data": {"items": items},
+      "data": {"items": rows, "columns": columns},
     };
   }
 
   factory TableSection.fromJson(Map<String, dynamic> json) {
     final items = json['items'] as List<dynamic>;
-    return TableSection(items: items);
+    final columns = json['columns'] as List<dynamic>;
+
+    return TableSection(
+      rows: items.map((e) => e as List<String>).toList(),
+      columns: columns.map((e) => e as String).toList(),
+    );
   }
 }
 

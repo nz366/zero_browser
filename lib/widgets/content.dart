@@ -149,36 +149,45 @@ Widget sectionToWidget(
       ),
       LayoutConfig.table => const SliverToBoxAdapter(child: SizedBox.shrink()),
     },
-    TableSection tableSection => wrapsliver(
-      tableSection.items.isEmpty
-          ? const SizedBox.shrink()
-          : Table(
-              rows: tableSection.items
-                  .map(
-                    (r) => TableRow(
-                      cells: r.values
-                          .map<TableCell>(
-                            (c) => TableCell(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: buildMiniMarkDown(
-                                    c.toString(),
-                                    context,
-                                    page,
-                                  ),
+    TableSection tableSection => SliverList.builder(
+      itemCount: tableSection.rows.length ~/ 10,
+      itemBuilder: (context, index) {
+        var start = index * 10;
+        var end = (index + 1) * 10;
+        return SizedBox(
+          height: 300,
+          child: Table(
+            rows: tableSection.rows
+                .skip(start)
+                .take(end - start)
+                .map(
+                  (r) => TableRow(
+                    cells: r
+                        .map<TableCell>(
+                          (c) => TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              // child: Text(c.toString(), maxLines: 1),
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.vertical,
+                                child: buildMiniMarkDown(
+                                  c.toString(),
+                                  context,
+                                  page,
                                 ),
                               ),
                             ),
-                          )
-                          .toList(),
-                    ),
-                  )
-                  .toList(),
-            ),
-      useSliverAdapter,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                )
+                .toList(),
+          ),
+        );
+      },
     ),
+
     CommentThreadSection commentThread => SliverList.builder(
       itemCount: commentThread.data.length,
       itemBuilder: (c, i) {

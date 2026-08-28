@@ -58,15 +58,14 @@ void main() {
 
     test('TableSection', () {
       final section = TableSection(
-        items: [
-          'Item 1',
-          123,
-          {'key': 'value'},
+        columns: ['col1', 'col2', 'col3'],
+        rows: [
+          ['Item 1', '123', 'value'],
         ],
       );
       final json = section.toJson();
       final decoded = Section.fromJson(json) as TableSection;
-      expect(decoded.items, section.items);
+      expect(decoded.rows, section.rows);
     });
 
     test('ImageGridSection', () {
@@ -128,7 +127,12 @@ void main() {
       title: 'Test Page',
       content: [
         const MarkdownSection('Start'),
-        TableSection(items: [1, 2, 3]),
+        TableSection(
+          rows: [
+            ["1", "2", "3"],
+          ],
+          columns: ["1", "2", "3"],
+        ),
       ],
     );
 

@@ -33,9 +33,7 @@ class GithubSite implements SiteProfile {
       return Structure(
         body: [
           MarkdownSection("# ${uri.path.split("/").last}"),
-          TableSection(
-            items: repoRootInfo.files.map((file) => {"file": file}).toList(),
-          ),
+          TableSection(rows: repoRootInfo.files.toRows()),
 
           MarkdownSection(data.body),
         ],
@@ -44,6 +42,12 @@ class GithubSite implements SiteProfile {
       );
     },
   );
+}
+
+extension on List<String> {
+  List<List<String>> toRows() {
+    return map((e) => [e]).toList();
+  }
 }
 
 class RepoRootInfo {
