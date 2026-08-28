@@ -3,6 +3,7 @@ import 'dart:io' show File, HttpHeaders;
 
 import 'package:http/http.dart';
 import 'package:mime/mime.dart';
+import 'package:zero_browser/client/http_cache.dart';
 import 'package:zero_browser/utils/utils.dart';
 
 class ResponseDetails extends Response {
@@ -31,6 +32,8 @@ class ResponseDetails extends Response {
 }
 
 class Client {
+  final ClientCache cache = ClientCache();
+
   Future<ResponseDetails> httpRequest(
     String url, {
     bool throwError = false,
@@ -42,8 +45,10 @@ class Client {
     Uri url, {
     bool throwError = false,
   }) async {
-    final baseUri = url.insertOrIgnore(newScheme: "https://");
-    final response = await get(baseUri);
+    final response = await cache.getOrFetch(url, ([headers]) async {
+      final fixedUri = url.insertOrIgnore(newScheme: "https://");
+      return await get(fixedUri, headers: headers);
+    });
 
     if (throwError && response.statusCode != 200) {
       throw Exception(

@@ -19,9 +19,7 @@ class HackernewsSite implements SiteProfile {
 
   static const int maxCommentDepth = 5;
 
-  // TODO: wait for cache
-  final Map<String, String> _cache = {};
-  final Map<String, Future<String?>> _pendingRequests = {};
+
 
   @override
   RequestProfile get request => RequestProfile(
@@ -573,40 +571,6 @@ $text
     Client client,
     String url, {
     bool throwError = false,
-  }) async {
-    final cached = _cache[url];
-
-    if (cached != null) {
-      return cached;
-    }
-
-    final pending = _pendingRequests[url];
-
-    if (pending != null) {
-      return pending;
-    }
-
-    final future = _performFirebaseRequest(client, url, throwError: throwError);
-
-    _pendingRequests[url] = future;
-
-    try {
-      final result = await future;
-
-      if (result != null) {
-        _cache[url] = result;
-      }
-
-      return result;
-    } finally {
-      _pendingRequests.remove(url);
-    }
-  }
-
-  Future<String?> _performFirebaseRequest(
-    Client client,
-    String url, {
-    required bool throwError,
   }) async {
     try {
       final response = await client.httpRequest(url, throwError: throwError);
